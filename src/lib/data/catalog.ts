@@ -180,3 +180,18 @@ export async function getStaticProductSlugs() {
     .limit(24);
   return data?.length ? data.map((p) => ({ slug: p.slug })) : [{ slug: "__placeholder__" }];
 }
+
+export async function getSitemapData() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(CATALOG_TAG);
+
+  const supabase = createPublicClient();
+  const [categories, products] = await Promise.all([
+    supabase.from("categories").select("slug").order("sort_order"),
+    supabase.from("products").select("slug, updated_at").eq("is_active", true),
+  ]);
+  if (categories.error) throw categories.error;
+  if (products.error) throw products.error;
+  return { categories: categories.data, products: products.data };
+}

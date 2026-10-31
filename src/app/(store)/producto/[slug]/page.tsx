@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { ChevronLeft } from "lucide-react";
-import { storageUrl } from "@/lib/env";
+import { env, storageUrl } from "@/lib/env";
 import { formatPrice } from "@/lib/format";
 import { site } from "@/lib/site";
 import { toSummary } from "@/lib/types";
@@ -24,7 +24,18 @@ export async function generateMetadata({ params }: PageProps<"/producto/[slug]">
   return {
     title: product.name,
     description: product.description.slice(0, 160) || site.description,
-    openGraph: image ? { images: [storageUrl(image.path)] } : undefined,
+    alternates: { canonical: `/producto/${product.slug}` },
+    // Un `openGraph: undefined` aquí borraría también el del layout raíz.
+    openGraph: {
+      type: "website",
+      siteName: site.name,
+      locale: "es_HN",
+      title: product.name,
+      description: product.description.slice(0, 160) || site.description,
+      url: `/producto/${product.slug}`,
+      // Sin foto del producto, se comparte la imagen general del sitio.
+      images: [image ? storageUrl(image.path) : "/opengraph-image"],
+    },
   };
 }
 
@@ -50,9 +61,29 @@ async function ProductDetail({ params }: Pick<PageProps<"/producto/[slug]">, "pa
   if (!product) notFound();
 
   const summary = toSummary(product);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description || undefined,
+    image: product.images.map((i) => storageUrl(i.path)),
+    category: product.category?.name,
+    url: `${env.siteUrl}/producto/${product.slug}`,
+    offers: {
+      "@type": "Offer",
+      price: product.price.toFixed(2),
+      priceCurrency: "HNL",
+      availability: "https://schema.org/InStock",
+    },
+  };
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        // "<" escapado para que el contenido del producto no pueda cerrar la etiqueta.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
       <div className="grid gap-8 md:grid-cols-2 md:gap-12">
         <Gallery
           images={product.images}

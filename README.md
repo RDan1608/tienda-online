@@ -36,7 +36,7 @@ select id from auth.users where email = 'nuevo@ejemplo.com';
 - [x] 2 · Carrito, favoritos, pedido (email listo; falta RESEND_API_KEY)
 - [x] 3 · Admin: login, CRUD productos/imágenes/categorías
 - [x] 4 · Admin: pedidos, realtime, email (varios destinatarios en ORDER_NOTIFY_EMAIL)
-- [ ] 5 · Más vendidos, SEO, QA, cron anti-pausa
+- [x] 5 · SEO, accesibilidad, rendimiento, cron anti-pausa, QA
 
 ## Datos de demostración
 
@@ -44,3 +44,22 @@ select id from auth.users where email = 'nuevo@ejemplo.com';
 ```sql
 delete from public.products where slug like 'demo-%';
 ```
+
+## Antes de lanzar (checklist)
+
+1. **Nombre y textos**: editar `src/lib/site.ts` (nombre, lema, texto de cómo comprar).
+2. **Productos**: borrar los demo (SQL de arriba) y cargar los reales desde `/admin`.
+3. **Dominio**: Vercel → Settings → Domains. Después actualizar la URL permitida de login en
+   `supabase/config.toml` (`site_url` y `additional_redirect_urls`) y correr `supabase config push`.
+4. **Correo**: verificar el dominio en Resend, poner `ORDER_FROM_EMAIL` con ese dominio y
+   los destinatarios en `ORDER_NOTIFY_EMAIL` (separados por coma). Sin dominio propio, Resend
+   solo entrega a la cuenta dueña.
+5. **Credenciales**: cambiar la contraseña del admin y rotar la API key de Resend si se compartió.
+6. **Hosting**: el plan Hobby de Vercel no permite uso comercial; pasar a Pro o mover a Cloudflare.
+
+## Mantenimiento
+
+- **Cron** (`vercel.ts`): `/api/keepalive` corre a diario y evita que Supabase (plan gratis) pause la base.
+  Requiere la variable `CRON_SECRET` en Vercel.
+- **SEO**: `/sitemap.xml` y `/robots.txt` se generan solos; cada producto lleva datos estructurados (JSON-LD).
+- **Pruebas rápidas**: `npm run lint && npx tsc --noEmit && npm run build`.

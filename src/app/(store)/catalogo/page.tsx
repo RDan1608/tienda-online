@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { createSerializer } from "nuqs/server";
 import { catalogParsers, loadCatalogParams } from "@/lib/catalog-params";
 import { getCategories, getProducts, getTagFacets } from "@/lib/data/catalog";
@@ -10,6 +11,7 @@ import { CatalogShell } from "./catalog-filters";
 export const metadata: Metadata = {
   title: "Catálogo",
   description: "Explora joyería, peluches, pines, llaveros, phone charms y legos.",
+  alternates: { canonical: "/catalogo" },
 };
 
 const serialize = createSerializer(catalogParsers);
@@ -34,9 +36,12 @@ async function Catalog({ searchParams }: Pick<PageProps<"/catalogo">, "searchPar
   ]);
 
   return (
+    // El adaptador de nuqs solo se necesita aquí: así el resto de páginas no descarga esa librería.
+    <NuqsAdapter>
     <CatalogShell categories={categories} tags={tags} total={total}>
       {products.length ? (
         <>
+          <h2 className="sr-only">Productos</h2>
           <ProductGrid products={products} priorityCount={4} />
           {products.length < total && (
             <div className="mt-12 flex justify-center">
@@ -63,6 +68,7 @@ async function Catalog({ searchParams }: Pick<PageProps<"/catalogo">, "searchPar
         </div>
       )}
     </CatalogShell>
+    </NuqsAdapter>
   );
 }
 

@@ -11,7 +11,7 @@
   --background: var(--ivory);
   --foreground: var(--navy);
   --surface: #ffffff;
-  --muted: #5d7186; /* texto secundario, AA sobre ivory */
+  --muted: #50657b; /* texto secundario: AA (≥4.5) incluso sobre powder */
   --border: color-mix(in oklab, var(--dusty) 55%, white);
 }
 
@@ -70,4 +70,9 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+:focus-visible {
+  outline: 2px solid var(--steel);
+  outline-offset: 2px;
 }

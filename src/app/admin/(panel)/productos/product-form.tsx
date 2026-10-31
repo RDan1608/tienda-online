@@ -211,10 +211,10 @@ export function ProductForm({
           </button>
           <p role="status" className="text-sm">
             {state.status === "saved" && (
-              <span className="inline-flex items-center gap-1 text-steel"><Check className="size-4" /> Guardado</span>
+              <span className="inline-flex items-center gap-1 text-navy"><Check className="size-4" /> Guardado</span>
             )}
             {state.status === "idle" && justCreated && (
-              <span className="inline-flex items-center gap-1 text-steel"><Check className="size-4" /> Producto creado</span>
+              <span className="inline-flex items-center gap-1 text-navy"><Check className="size-4" /> Producto creado</span>
             )}
             {state.status === "error" && <span className="text-red-700">{state.message}</span>}
           </p>
