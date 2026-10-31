@@ -32,8 +32,15 @@ select id from auth.users where email = 'nuevo@ejemplo.com';
 ## Fases
 
 - [x] 0 · Setup, esquema, RLS, tema
-- [ ] 1 · Catálogo público + filtros + detalle
-- [ ] 2 · Carrito, favoritos, pedido
+- [x] 1 · Catálogo público + filtros + detalle
+- [x] 2 · Carrito, favoritos, pedido (email listo; falta RESEND_API_KEY)
 - [ ] 3 · Admin: login, CRUD productos/imágenes
 - [ ] 4 · Admin: pedidos, realtime, email
 - [ ] 5 · Más vendidos, SEO, QA, cron anti-pausa
+
+## Datos de demostración
+
+`supabase/demo-products.sql` carga 15 productos `demo-*`. Para borrarlos:
+```sql
+delete from public.products where slug like 'demo-%';
+```

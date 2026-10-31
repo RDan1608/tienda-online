@@ -1,0 +1,42 @@
+"use client";
+
+import { Heart } from "lucide-react";
+import { useFavorites, useHydrated } from "@/lib/stores";
+import type { ProductSummary } from "@/lib/types";
+
+export function FavoriteButton({
+  product,
+  variant = "floating",
+}: {
+  product: ProductSummary;
+  variant?: "floating" | "inline";
+}) {
+  const hydrated = useHydrated();
+  const toggle = useFavorites((s) => s.toggle);
+  const active = useFavorites((s) => s.items.some((i) => i.id === product.id)) && hydrated;
+
+  const label = active ? "Quitar de favoritos" : "Agregar a favoritos";
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        toggle(product);
+      }}
+      aria-pressed={active}
+      aria-label={label}
+      title={label}
+      className={
+        variant === "floating"
+          ? "grid size-9 place-items-center rounded-full bg-ivory/85 text-navy backdrop-blur transition hover:bg-ivory active:scale-90"
+          : "grid size-12 shrink-0 place-items-center rounded-full border border-border text-navy transition hover:border-steel active:scale-90"
+      }
+    >
+      <Heart
+        className={`size-[18px] transition-colors ${active ? "fill-navy" : ""}`}
+        strokeWidth={1.75}
+      />
+    </button>
+  );
+}
