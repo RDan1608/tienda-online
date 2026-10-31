@@ -9,6 +9,7 @@ import { cartTotal, useCart, useHydrated, type CartItem } from "@/lib/stores";
 import { useFreshProducts } from "@/lib/use-fresh-products";
 import { SummaryRow } from "@/components/summary-row";
 import { EmptyState } from "@/components/empty-state";
+import { useSubmit } from "@/lib/use-submit";
 import { createOrder, type OrderState } from "./actions";
 
 export function CartView() {
@@ -24,6 +25,8 @@ export function CartView() {
   const [state, formAction, pending] = useActionState<OrderState, FormData>(createOrder, {
     status: "idle",
   });
+
+  const onSubmit = useSubmit(formAction);
 
   // Pedido creado → vaciar carrito.
   useEffect(() => {
@@ -66,7 +69,7 @@ export function CartView() {
       </section>
 
       <section aria-labelledby="datos" className="lg:sticky lg:top-24 lg:self-start">
-        <form action={formAction} className="rounded-3xl bg-surface p-5 ring-1 ring-border sm:p-6" noValidate>
+        <form onSubmit={onSubmit} className="rounded-3xl bg-surface p-5 ring-1 ring-border sm:p-6" noValidate>
           <h2 id="datos" className="font-serif text-2xl font-medium">Tus datos</h2>
           <p className="mt-1 text-sm text-muted">{site.orderInfo}</p>
 

@@ -1,0 +1,141 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { updateTag } from "next/cache";
+import { z } from "zod";
+import { requireAdmin } from "@/lib/admin";
+import { CATALOG_TAG } from "@/lib/data/catalog";
+import { slugify } from "@/lib/slug";
+
+const BUCKET = "products";
+
+const schema = z.object({
+  id: z.uuid(),
+  name: z.string().trim().min(1, "Escribe el nombre").max(120, "Máximo 120 caracteres"),
+  description: z.string().trim().max(2000, "Máximo 2000 caracteres"),
+  price: z.coerce.number("Precio inválido").min(0, "Precio inválido").max(1_000_000, "Precio demasiado alto"),
+  category_id: z.union([z.uuid(), z.literal("")]),
+  tags: z.string().max(300, "Demasiadas etiquetas"),
+  images: z
+    .array(
+      z.object({
+        path: z.string().regex(/^[0-9a-f-]{36}\/[\w.-]+$/),
+        alt: z.string().trim().max(150),
+      }),
+    )
+    .max(8, "Máximo 8 fotos"),
+});
+
+export type ProductState =
+  | { status: "idle" }
+  | { status: "saved"; at: number }
+  | { status: "error"; message: string; fields?: Partial<Record<string, string>> };
+
+function parseTags(raw: string) {
+  const tags = raw
+    .split(",")
+    .map((t) => t.trim().toLowerCase().replace(/\s+/g, " "))
+    .filter((t) => t && t.length <= 30);
+  return [...new Set(tags)].slice(0, 10);
+}
+
+export async function saveProduct(_prev: ProductState, formData: FormData): Promise<ProductState> {
+  const { supabase } = await requireAdmin();
+
+  let images: unknown;
+  try {
+    images = JSON.parse(String(formData.get("images") ?? "[]"));
+  } catch {
+    return { status: "error", message: "Las fotos tienen un problema. Recarga la página." };
+  }
+
+  const parsed = schema.safeParse({
+    id: formData.get("id"),
+    name: formData.get("name") ?? "",
+    description: formData.get("description") ?? "",
+    price: formData.get("price") ?? "",
+    category_id: formData.get("category_id") ?? "",
+    tags: formData.get("tags") ?? "",
+    images,
+  });
+
+  if (!parsed.success) {
+    const fields: Record<string, string> = {};
+    for (const issue of parsed.error.issues) fields[String(issue.path[0])] ??= issue.message;
+    return { status: "error", message: "Revisa los datos marcados.", fields };
+  }
+
+  const d = parsed.data;
+  // Cada foto debe vivir en la carpeta de ESTE producto.
+  if (d.images.some((i) => !i.path.startsWith(`${d.id}/`))) {
+    return { status: "error", message: "Una foto no pertenece a este producto." };
+  }
+
+  const fields = {
+    name: d.name,
+    description: d.description,
+    price: Math.round(d.price * 100) / 100,
+    category_id: d.category_id || null,
+    tags: parseTags(d.tags),
+    is_active: formData.get("is_active") === "on",
+    is_featured: formData.get("is_featured") === "on",
+  };
+
+  const { data: existing } = await supabase.from("products").select("id").eq("id", d.id).maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase.from("products").update(fields).eq("id", d.id);
+    if (error) return { status: "error", message: "No se pudo guardar. Intenta de nuevo." };
+  } else {
+    // slug único: base, base-2, base-3… (el slug no cambia al editar, para no romper links)
+    const base = slugify(d.name);
+    let inserted = false;
+    for (let n = 1; n <= 6 && !inserted; n++) {
+      const slug = n === 1 ? base : n < 6 ? `${base}-${n}` : `${base}-${crypto.randomUUID().slice(0, 6)}`;
+      const { error } = await supabase.from("products").insert({ id: d.id, slug, ...fields });
+      if (!error) inserted = true;
+      else if (error.code !== "23505") return { status: "error", message: "No se pudo guardar. Intenta de nuevo." };
+    }
+    if (!inserted) return { status: "error", message: "No se pudo generar un nombre único." };
+  }
+
+  // Sincroniza fotos: reemplaza filas y borra del bucket las que ya no se usan.
+  const { data: prev } = await supabase.from("product_images").select("path").eq("product_id", d.id);
+  await supabase.from("product_images").delete().eq("product_id", d.id);
+  if (d.images.length) {
+    const { error } = await supabase.from("product_images").insert(
+      d.images.map((img, i) => ({ product_id: d.id, path: img.path, alt: img.alt, sort_order: i })),
+    );
+    if (error) return { status: "error", message: "Se guardó el producto pero fallaron las fotos." };
+  }
+  const keep = new Set(d.images.map((i) => i.path));
+  const orphaned = (prev ?? []).map((p) => p.path).filter((p) => !keep.has(p));
+  if (orphaned.length) await supabase.storage.from(BUCKET).remove(orphaned);
+
+  updateTag(CATALOG_TAG);
+
+  if (!existing) redirect(`/admin/productos/${d.id}?creado=1`);
+  return { status: "saved", at: Date.now() };
+}
+
+export async function toggleActive(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const id = z.uuid().parse(formData.get("id"));
+  const active = formData.get("active") === "true";
+  await supabase.from("products").update({ is_active: active }).eq("id", id);
+  updateTag(CATALOG_TAG);
+  redirect("/admin/productos");
+}
+
+export async function deleteProduct(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const id = z.uuid().parse(formData.get("id"));
+
+  const { data: imgs } = await supabase.from("product_images").select("path").eq("product_id", id);
+  if (imgs?.length) await supabase.storage.from(BUCKET).remove(imgs.map((i) => i.path));
+  // Los pedidos conservan nombre y precio (snapshot); product_id pasa a null.
+  await supabase.from("products").delete().eq("id", id);
+
+  updateTag(CATALOG_TAG);
+  redirect("/admin/productos");
+}
