@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Heart, Search, ShoppingBag } from "lucide-react";
 import { cartCount, useCart, useFavorites, useHydrated } from "@/lib/stores";
 
-export function Badge({ value }: { value: number }) {
+export function Badge({ value, tone = "rose", ring = false }: { value: number; tone?: "rose" | "navy"; ring?: boolean }) {
   // Estado derivado durante el render (patrón recomendado): detecta cuando el número SUBE.
   const [prev, setPrev] = useState(value);
   const [bump, setBump] = useState(0);
@@ -18,7 +18,7 @@ export function Badge({ value }: { value: number }) {
   return (
     <span
       key={bump}
-      className={`${bump ? "pop" : "pill-in"} absolute -right-1 -top-1 grid min-w-[18px] place-items-center rounded-full bg-navy px-1 text-[10px] font-medium leading-[18px] text-ivory`}>
+      className={`${bump ? "pop" : "pill-in"} absolute -right-1 -top-1 grid min-w-[18px] place-items-center rounded-full bg-navy px-1 text-[10px] font-bold leading-[18px] tabular-nums text-white ${tone === "rose" ? "bg-rose-ink" : "bg-navy"} ${ring ? "ring-2 ring-ivory" : ""}`}>
       {value > 99 ? "99+" : value}
     </span>
   );
@@ -41,12 +41,14 @@ export function HeaderActions() {
       <Link href="/catalogo#buscar" className={btn} aria-label="Buscar">
         <Search className="size-5" strokeWidth={1.75} />
       </Link>
-      <Link href="/favoritos" className={`${btn} max-md:hidden`} aria-label={`Favoritos (${favs})`}>
-        <Heart className="size-5" strokeWidth={1.75} />
+      <Link href="/favoritos" className={`${btn} max-md:hidden`}>
+        <span className="sr-only">Favoritos</span>
+        <Heart className="size-5" strokeWidth={1.75} aria-hidden />
         <Badge value={favs} />
       </Link>
-      <Link href="/carrito" className={`${btn} max-md:hidden`} aria-label={`Carrito (${cart})`}>
-        <ShoppingBag className="size-5" strokeWidth={1.75} />
+      <Link href="/carrito" className={`${btn} max-md:hidden`}>
+        <span className="sr-only">Mi pedido</span>
+        <ShoppingBag className="size-5" strokeWidth={1.75} aria-hidden />
         <Badge value={cart} />
       </Link>
     </div>

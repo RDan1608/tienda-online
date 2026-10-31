@@ -53,7 +53,7 @@ export default async function OrderPage({ params }: PageProps<"/admin/pedidos/[i
       </Link>
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <h1 className="font-serif text-4xl font-medium tabular-nums">{o.code}</h1>
+        <h1 className="font-display text-4xl font-semibold tracking-[-0.025em] tabular-nums">{o.code}</h1>
         <StatusBadge status={o.status} />
       </div>
       <p className="mt-1 text-sm text-muted">{formatDateTime(o.created_at)}</p>

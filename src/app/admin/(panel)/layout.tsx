@@ -19,7 +19,7 @@ async function Gate({ children }: { children: React.ReactNode }) {
     return (
       <main className="grid min-h-dvh place-items-center bg-ivory px-4 text-center">
         <div className="max-w-sm">
-          <p className="font-serif text-3xl">Sin permisos</p>
+          <p className="font-display tracking-[-0.025em] text-3xl">Sin permisos</p>
           <p className="mt-2 text-sm text-muted">
             Esta cuenta no tiene acceso al panel de administración.
           </p>

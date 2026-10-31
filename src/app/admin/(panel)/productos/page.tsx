@@ -35,7 +35,7 @@ export default async function ProductsPage() {
     <>
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="font-serif text-4xl font-medium">Productos</h1>
+          <h1 className="font-display text-4xl font-semibold tracking-[-0.025em]">Productos</h1>
           <p className="mt-1 text-sm text-muted">{products.length} en total</p>
         </div>
         <Link

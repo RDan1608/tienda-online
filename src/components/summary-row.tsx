@@ -24,10 +24,10 @@ export function SummaryRow({
     >
       <div className="min-h-0 overflow-hidden">
         <div className="flex gap-4 py-5">
-      <Link href={`/producto/${product.slug}`} className="w-20 shrink-0 sm:w-24">
+      <Link href={`/producto/${product.slug}`} tabIndex={-1} aria-hidden className="w-20 shrink-0 sm:w-24">
         <ProductImage
           path={product.imagePath}
-          alt={product.name}
+          alt=""
           categorySlug={product.categorySlug}
           sizes="96px"
           className="rounded-xl"

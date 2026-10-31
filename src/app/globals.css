@@ -8,6 +8,18 @@
   --navy: #364d66;
   --ivory: #f7f6f2;
 
+  /* Acentos cálidos que acompañan al azul (el cliente pidió salir de la paleta fría) */
+  --navy-deep: #243447; /* pulsado/hover del botón primario */
+  --rose: #d94a64; /* corazón: solo gráficos (3.8:1 sobre ivory), nunca texto */
+  --rose-ink: #b8344f; /* texto y badges rosa (5.3:1 sobre ivory, 5.8:1 con blanco) */
+  --blush: #fbe4e8; /* fondos de acento (favoritos, peluches) */
+  --honey: #f2c14e; /* "Más vendido" (texto navy encima: 5.2:1) */
+  --butter: #fcefd6; /* fondos cálidos: llaveros, "cómo pedir" */
+  --honey-ink: #8a5a12; /* texto sobre butter (5.2:1) */
+
+  /* alto de la barra inferior móvil, usado por barras fijas y avisos */
+  --mobile-nav-h: calc(4.4rem + env(safe-area-inset-bottom));
+
   /* Movimiento: salidas rápidas y con carácter; nunca ease-in en la interfaz */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
@@ -21,6 +33,17 @@
 }
 
 @theme inline {
+  --color-navy-deep: var(--navy-deep);
+  --color-rose: var(--rose);
+  --color-rose-ink: var(--rose-ink);
+  --color-blush: var(--blush);
+  --color-honey: var(--honey);
+  --color-butter: var(--butter);
+  --color-honey-ink: var(--honey-ink);
+
+  --shadow-soft: 0 1px 2px rgb(54 77 102 / 0.06), 0 8px 24px -12px rgb(54 77 102 / 0.18);
+  --shadow-float: 0 12px 32px -12px rgb(54 77 102 / 0.32);
+
   --color-powder: var(--powder);
   --color-dusty: var(--dusty);
   --color-steel: var(--steel);
@@ -33,8 +56,8 @@
   --color-muted: var(--muted);
   --color-border: var(--border);
 
-  --font-sans: var(--font-dm-sans);
-  --font-serif: var(--font-cormorant);
+  --font-sans: var(--font-jakarta);
+  --font-display: var(--font-jakarta);
 }
 
 body {
@@ -42,6 +65,16 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* El espacio de Plus Jakarta Sans es angosto (0.17em): se compensa para que "15 productos" no se pegue. */
+  word-spacing: 0.12em;
+}
+
+/* Los controles de formulario reinician word-spacing en el navegador: se hereda para que los botones no pierdan los espacios. */
+button,
+input,
+select,
+textarea {
+  word-spacing: inherit;
 }
 
 ::selection {
@@ -148,7 +181,8 @@ body {
   border: 0;
   background: transparent;
   color: inherit;
-  overflow: hidden;
+  /* "clip" (no "hidden"): impide que el foco desplace el contenedor mientras la hoja sube animada. */
+  overflow: clip;
 }
 .sheet[open] {
   display: flex;
@@ -233,4 +267,52 @@ html:has(dialog[open]) {
 /* El buscador ya trae su propio botón de borrar */
 input[type="search"]::-webkit-search-cancel-button {
   display: none;
+}
+
+/* ───────── Microinteracciones del rediseño ───────── */
+/* Cambio de estado de un botón (agregar → contador): el contenido entra con 4 px de subida. */
+@keyframes swap-in {
+  from {
+    opacity: 0.2;
+    transform: translateY(4px);
+  }
+}
+.swap-in {
+  animation: swap-in 220ms var(--ease-out);
+}
+/* La píldora de la barra inferior "aterriza" al llegar a su pestaña. */
+@keyframes pill-land {
+  from {
+    transform: scaleX(0.82);
+  }
+}
+.pill-land {
+  animation: pill-land 320ms var(--ease-out);
+}
+/* Destellos del corazón: 6 puntos que salen en abanico y se desvanecen. */
+.burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.burst i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin: -2px;
+  border-radius: 9999px;
+  background: var(--rose);
+  animation: burst 460ms var(--ease-out) forwards;
+}
+@keyframes burst {
+  from {
+    transform: rotate(var(--a)) translateY(-8px) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: rotate(var(--a)) translateY(-20px) scale(0.3);
+    opacity: 0;
+  }
 }

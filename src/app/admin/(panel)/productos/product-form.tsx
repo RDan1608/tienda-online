@@ -93,7 +93,7 @@ export function ProductForm({
 
         {/* Fotos */}
         <section aria-labelledby="fotos">
-          <h2 id="fotos" className="mb-1 font-serif text-2xl font-medium">Fotos</h2>
+          <h2 id="fotos" className="mb-1 font-display text-2xl font-semibold tracking-[-0.025em]">Fotos</h2>
           <p className="mb-4 text-sm text-muted">
             La primera es la portada. Se optimizan automáticamente. Hasta {MAX_IMAGES}.
           </p>
@@ -156,7 +156,7 @@ export function ProductForm({
 
         {/* Datos */}
         <section aria-labelledby="datos" className="space-y-4">
-          <h2 id="datos" className="font-serif text-2xl font-medium">Datos</h2>
+          <h2 id="datos" className="font-display text-2xl font-semibold tracking-[-0.025em]">Datos</h2>
 
           <Labeled label="Nombre" error={err("name")}>
             <input name="name" defaultValue={product?.name} maxLength={120} required className={`${field} h-12`} />

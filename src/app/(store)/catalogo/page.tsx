@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default function CatalogPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 pt-8 sm:px-6 sm:pt-12">
-      <h1 className="mb-6 font-serif text-4xl font-medium sm:text-5xl">Catálogo</h1>
+      <h1 className="mb-6 font-display text-4xl font-semibold tracking-[-0.025em] sm:text-5xl">Catálogo</h1>
       <Suspense fallback={<CatalogFallback />}>
         <Catalog />
       </Suspense>

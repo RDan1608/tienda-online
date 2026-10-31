@@ -44,7 +44,7 @@ export default async function EditProductPage({ params, searchParams }: PageProp
         <ChevronLeft className="size-4" /> Productos
       </Link>
       <div className="mb-8 flex items-start justify-between gap-4">
-        <h1 className="font-serif text-4xl font-medium text-balance">{p.name}</h1>
+        <h1 className="font-display text-4xl font-semibold tracking-[-0.025em] text-balance">{p.name}</h1>
         {p.is_active && (
           <Link
             href={`/producto/${p.slug}`}

@@ -63,3 +63,15 @@ delete from public.products where slug like 'demo-%';
   Requiere la variable `CRON_SECRET` en Vercel.
 - **SEO**: `/sitemap.xml` y `/robots.txt` se generan solos; cada producto lleva datos estructurados (JSON-LD).
 - **Pruebas rápidas**: `npm run lint && npx tsc --noEmit && npm run build`.
+
+## Diseño
+
+- **Tipografía:** Plus Jakarta Sans (una sola familia, `next/font`). Su espacio es angosto: `word-spacing` global compensa.
+- **Color:** paleta del cliente (powder, dusty, steel, navy, ivory) + acentos cálidos en `globals.css`:
+  rosa (`--rose`, solo gráficos como el corazón; `--rose-ink` para texto/badges), miel y mantequilla.
+  Todos los textos cumplen contraste AA.
+- **Ilustraciones:** `src/components/illustrations.tsx` (una por categoría). Se usan en la portada, los productos sin foto,
+  los estados vacíos y los fondos de categoría. Con fotos reales conviven bien (fondo claro liso, recorte 4:5).
+- **Carrito:** `useCartLine` + `CartButton` (`src/components/cart-button.tsx`) son la única forma de agregar:
+  el botón se convierte en contador, "−" en 1 quita con "Deshacer".
+- **WhatsApp:** poner el número (solo dígitos con código de país) en `site.whatsapp` para activar el botón en la pantalla de éxito.

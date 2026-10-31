@@ -31,7 +31,7 @@ export default async function AdminHome() {
   return (
     <>
       <div className="flex items-end justify-between gap-4">
-        <h1 className="font-serif text-4xl font-medium">Resumen</h1>
+        <h1 className="font-display text-4xl font-semibold tracking-[-0.025em]">Resumen</h1>
         <Link
           href="/admin/productos/nuevo"
           className="inline-flex h-11 items-center gap-2 rounded-full bg-navy px-5 text-sm font-medium text-ivory transition active:scale-[0.98]"
@@ -67,7 +67,7 @@ export default async function AdminHome() {
       {recent.data && recent.data.length > 0 && (
         <section className="mt-12">
           <div className="mb-3 flex items-end justify-between">
-            <h2 className="font-serif text-2xl font-medium">Últimos pedidos</h2>
+            <h2 className="font-display text-2xl font-semibold tracking-[-0.025em]">Últimos pedidos</h2>
             <Link href="/admin/pedidos" className="text-sm text-muted hover:text-navy">
               Ver todos
             </Link>

@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
-import { CircleCheck, LoaderCircle, Minus, Plus, ShoppingBag, X } from "lucide-react";
+import { Check, Copy, LoaderCircle, Minus, Plus, Trash2 } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { site } from "@/lib/site";
 import { cartTotal, useCart, useHydrated, type CartItem } from "@/lib/stores";
@@ -25,52 +25,77 @@ export function CartView() {
   const [state, formAction, pending] = useActionState<OrderState, FormData>(createOrder, {
     status: "idle",
   });
+  const [showEmail, setShowEmail] = useState(false);
 
   const onSubmit = useSubmit(formAction);
+  const hasItems = hydrated && items.length > 0 && state.status !== "success";
 
   // Pedido creado → vaciar carrito.
   useEffect(() => {
     if (state.status === "success") clear();
   }, [state, clear]);
 
+  // Con la barra fija visible, el aviso flotante se aparta de ella.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (hasItems) root.style.setProperty("--sticky-bar-h", "4.5rem");
+    return () => {
+      root.style.removeProperty("--sticky-bar-h");
+    };
+  }, [hasItems]);
+
   if (state.status === "success") return <Confirmation code={state.code} total={state.total} />;
-  if (!hydrated) return <div className="mt-8 h-64 animate-pulse rounded-3xl bg-powder/50" />;
+  if (!hydrated) return <div className="mt-8 h-64 animate-pulse rounded-[28px] bg-powder/50" />;
 
   if (!items.length) {
     return (
       <EmptyState
-        icon={<ShoppingBag className="size-7" strokeWidth={1.5} />}
-        title="Tu carrito está vacío"
-        text="Agrega productos desde el catálogo para hacer tu pedido."
+        art="pedido"
+        title="Tu pedido está vacío"
+        text="Agrega lo que te guste desde el catálogo y aquí lo armas."
+        cta="Explorar catálogo"
       />
     );
   }
 
   const total = cartTotal(items);
+  const units = items.reduce((n, i) => n + i.qty, 0);
+  const submitLabel = pending ? (
+    <>
+      <LoaderCircle className="size-[18px] animate-spin" /> Enviando…
+    </>
+  ) : (
+    <>Enviar pedido</>
+  );
 
   return (
-    <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_400px] lg:gap-14">
+    <div className="mt-6 grid gap-8 pb-24 lg:grid-cols-[1fr_400px] lg:gap-14 lg:pb-0">
       <section aria-label="Productos">
         {removed > 0 && (
-          <p className="mb-4 rounded-xl bg-powder/60 p-3 text-sm">
+          <p className="mb-4 rounded-2xl bg-butter p-3.5 text-sm">
             {removed === 1 ? "Un producto ya no está disponible" : `${removed} productos ya no están disponibles`} y
-            se quitó del carrito.
+            se quitó de tu pedido.
           </p>
         )}
+        <p className="mb-1 text-sm text-muted">
+          {units} {units === 1 ? "producto" : "productos"}
+        </p>
         <ul className="divide-y divide-border border-y border-border">
           {items.map((item) => (
             <CartRow key={item.id} item={item} />
           ))}
         </ul>
-        <div className="mt-6 flex items-baseline justify-between">
-          <span className="text-muted">Total estimado</span>
-          <span className="text-2xl font-medium">{formatPrice(total)}</span>
+        <div className="mt-5 flex items-baseline justify-between rounded-2xl bg-powder/60 px-5 py-4">
+          <span className="text-[15px] font-medium">Total estimado</span>
+          <span className="text-2xl font-extrabold tabular-nums tracking-[-0.02em]">{formatPrice(total)}</span>
         </div>
       </section>
 
       <section aria-labelledby="datos" className="lg:sticky lg:top-24 lg:self-start">
-        <form onSubmit={onSubmit} className="rounded-3xl bg-surface p-5 ring-1 ring-border sm:p-6" noValidate>
-          <h2 id="datos" className="font-serif text-2xl font-medium">Tus datos</h2>
+        <form id="pedido" onSubmit={onSubmit} className="rounded-[28px] bg-surface p-5 shadow-soft ring-1 ring-border sm:p-6" noValidate>
+          <h2 id="datos" className="font-display text-xl font-bold tracking-[-0.025em]">
+            ¿A quién se lo enviamos?
+          </h2>
           <p className="mt-1 text-sm text-muted">{site.orderInfo}</p>
 
           <input
@@ -93,7 +118,6 @@ export function CartView() {
               required
               state={state}
             />
-            <Field label="Correo (opcional)" name="email" type="email" autoComplete="email" state={state} />
             <Field
               label="Notas (opcional)"
               name="notes"
@@ -101,76 +125,102 @@ export function CartView() {
               placeholder="Color preferido, para regalo, zona de entrega…"
               state={state}
             />
+            {showEmail ? (
+              <div className="swap-in">
+                <Field label="Correo (opcional)" name="email" type="email" autoComplete="email" autoFocus state={state} />
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowEmail(true)}
+                className="inline-flex h-10 items-center gap-1.5 rounded-lg text-sm font-semibold text-navy underline-offset-4 hover:underline"
+              >
+                <Plus className="size-4" /> Agregar correo (opcional)
+              </button>
+            )}
           </div>
 
           {state.status === "error" && (
-            <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-800">
+            <p role="alert" className="mt-4 rounded-2xl bg-blush p-3.5 text-sm font-medium text-rose-ink">
               {state.message}
             </p>
           )}
 
+          {/* Escritorio: el botón vive en la tarjeta. En móvil lo reemplaza la barra fija de abajo. */}
           <button
             type="submit"
             disabled={pending}
-            className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-navy text-sm font-medium text-ivory transition hover:bg-navy/90 active:scale-[0.98] disabled:opacity-70"
+            className="mt-6 hidden h-14 w-full items-center justify-center gap-2 rounded-full bg-navy text-[15px] font-semibold text-ivory shadow-soft transition duration-150 hover:bg-navy-deep active:scale-[0.98] disabled:opacity-70 lg:inline-flex"
           >
-            {pending ? (
-              <>
-                <LoaderCircle className="size-[18px] animate-spin" /> Enviando…
-              </>
-            ) : (
-              <>Enviar pedido · {formatPrice(total)}</>
-            )}
+            {submitLabel} · {formatPrice(total)}
           </button>
-          <p className="mt-3 text-center text-xs text-muted">
-            No se cobra nada ahora. El total final lo confirmamos contigo.
-          </p>
+          <p className="mt-3 text-center text-xs text-muted">No se cobra nada ahora. El total final lo confirmamos contigo.</p>
         </form>
       </section>
+
+      {/* Móvil: total y botón siempre a la vista, sobre la navegación */}
+      <div className="fixed inset-x-0 bottom-[var(--mobile-nav-h)] z-30 border-t border-border bg-ivory/95 px-4 py-2.5 backdrop-blur-md lg:hidden">
+        <div className="mx-auto flex max-w-md items-center gap-4">
+          <div>
+            <p className="text-xs text-muted">Total estimado</p>
+            <p className="text-lg font-extrabold tabular-nums leading-tight">{formatPrice(total)}</p>
+          </div>
+          <button
+            type="submit"
+            form="pedido"
+            disabled={pending}
+            className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-navy text-[15px] font-semibold text-ivory transition active:scale-[0.98] disabled:opacity-70"
+          >
+            {submitLabel}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
 function CartRow({ item }: { item: CartItem }) {
-  const setQty = useCart((s) => s.setQty);
+  const add = useCart((s) => s.add);
+  const dec = useCart((s) => s.dec);
   const remove = useCart((s) => s.remove);
   const [leaving, setLeaving] = useState(false);
-  // Se pliega y desvanece, y recién entonces sale del carrito.
+  // Se pliega y desvanece, y recién entonces sale del pedido (con "Deshacer" en el aviso).
   const leave = () => {
     setLeaving(true);
     setTimeout(() => remove(item.id), 280);
   };
+  const MinusIcon = item.qty === 1 ? Trash2 : Minus;
 
   return (
-    <SummaryRow leaving={leaving} product={item} meta={<p className="shrink-0 font-medium">{formatPrice(item.price * item.qty)}</p>}>
-      <div className="flex items-center justify-between">
-        <div className="flex h-9 items-center rounded-full border border-border">
+    <SummaryRow
+      leaving={leaving}
+      product={item}
+      meta={<p className="shrink-0 text-[15px] font-bold tabular-nums">{formatPrice(item.price * item.qty)}</p>}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex h-10 items-center rounded-full bg-powder/70 p-0.5">
           <button
             type="button"
-            onClick={() => setQty(item.id, item.qty - 1)}
-            disabled={item.qty <= 1}
-            className="grid size-9 place-items-center rounded-full hover:bg-powder/70 disabled:opacity-40"
-            aria-label={`Quitar uno de ${item.name}`}
+            onClick={() => (item.qty === 1 ? leave() : dec(item.id))}
+            aria-label={item.qty === 1 ? `Quitar ${item.name} del pedido` : `Quitar uno de ${item.name}`}
+            className="grid size-9 place-items-center rounded-full bg-ivory shadow-soft transition-transform duration-150 active:scale-90"
           >
-            <Minus className="size-3.5" />
+            <MinusIcon className="size-4" />
           </button>
-          <span className="w-6 text-center text-sm tabular-nums">{item.qty}</span>
+          <span aria-live="polite" className="min-w-8 text-center text-sm font-semibold tabular-nums">
+            {item.qty}
+          </span>
           <button
             type="button"
-            onClick={() => setQty(item.id, item.qty + 1)}
-            className="grid size-9 place-items-center rounded-full hover:bg-powder/70"
-            aria-label={`Agregar uno de ${item.name}`}
+            onClick={() => add(item, 1)}
+            disabled={item.qty >= 99}
+            aria-label={`Agregar uno más de ${item.name}`}
+            className="grid size-9 place-items-center rounded-full bg-navy text-ivory transition-transform duration-150 active:scale-90 disabled:opacity-40"
           >
-            <Plus className="size-3.5" />
+            <Plus className="size-4" />
           </button>
         </div>
-        <button
-          type="button"
-          onClick={leave}
-          className="inline-flex items-center gap-1 text-sm text-muted hover:text-navy"
-        >
-          <X className="size-4" /> Quitar
-        </button>
+        <p className="text-xs text-muted">{formatPrice(item.price)} c/u</p>
       </div>
     </SummaryRow>
   );
@@ -189,14 +239,14 @@ function Field({
   state: OrderState;
 } & React.InputHTMLAttributes<HTMLInputElement>) {
   const error = state.status === "error" ? state.fields?.[name] : undefined;
-  const cls = `w-full rounded-xl border bg-ivory px-4 text-[15px] outline-none transition focus:border-steel focus:ring-4 focus:ring-powder ${
-    error ? "border-red-400" : "border-border"
+  const cls = `w-full rounded-2xl border bg-ivory px-4 text-[15px] outline-none transition focus:border-steel focus:bg-surface focus:ring-4 focus:ring-powder ${
+    error ? "border-rose-ink/60" : "border-border"
   }`;
   const describedBy = error ? `${name}-error` : undefined;
 
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm">{label}</span>
+      <span className="mb-1.5 block text-sm font-semibold">{label}</span>
       {textarea ? (
         <textarea
           name={name}
@@ -211,7 +261,7 @@ function Field({
         <input name={name} aria-invalid={!!error} aria-describedby={describedBy} className={`${cls} h-12`} {...props} />
       )}
       {error && (
-        <span id={describedBy} className="mt-1 block text-sm text-red-700">
+        <span id={describedBy} className="mt-1 block text-sm font-medium text-rose-ink">
           {error}
         </span>
       )}
@@ -220,20 +270,77 @@ function Field({
 }
 
 function Confirmation({ code, total }: { code: string; total: number }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Sin permiso de portapapeles: el código sigue visible para copiarlo a mano.
+    }
+  }
+
+  const wa = site.whatsapp
+    ? `https://wa.me/${site.whatsapp}?text=${encodeURIComponent(`Hola, hice el pedido ${code}.`)}`
+    : null;
+
   return (
-    <div className="mx-auto mt-10 max-w-lg rounded-3xl bg-powder/50 px-6 py-14 text-center">
-      <CircleCheck className="mx-auto size-12 text-steel" strokeWidth={1.25} />
-      <p className="mt-4 font-serif text-3xl">¡Pedido recibido!</p>
-      <p className="mt-3 text-muted">
-        Tu código es <strong className="text-navy">{code}</strong> · {formatPrice(total)}
+    <div className="card-in mx-auto mt-6 max-w-lg text-center">
+      <div className="pop mx-auto grid size-20 place-items-center rounded-full bg-powder">
+        <Check className="size-9 text-navy" strokeWidth={2.5} />
+      </div>
+      <h2 className="mt-5 font-display text-3xl font-extrabold tracking-[-0.035em]">¡Pedido recibido!</h2>
+      <p className="mt-2 text-muted">Guarda tu código por si quieres consultarnos algo.</p>
+
+      <div className="mt-6 flex items-center justify-between gap-3 rounded-2xl bg-butter py-3 pl-5 pr-3">
+        <div className="text-left">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-honey-ink">Tu código</p>
+          <p className="font-display text-2xl font-extrabold tracking-[0.04em] tabular-nums">{code}</p>
+        </div>
+        <button
+          type="button"
+          onClick={copy}
+          className="inline-flex h-11 items-center gap-2 rounded-full bg-ivory px-4 text-sm font-semibold shadow-soft transition active:scale-95"
+        >
+          {copied ? <Check className="pop size-4" strokeWidth={2.5} /> : <Copy className="size-4" />}
+          {copied ? "Copiado" : "Copiar"}
+        </button>
+      </div>
+      <p className="mt-3 text-sm text-muted">
+        Total estimado <strong className="text-navy">{formatPrice(total)}</strong>
       </p>
-      <p className="mt-2 text-sm text-muted">Te contactaremos pronto para coordinar el pago y la entrega.</p>
-      <Link
-        href="/catalogo"
-        className="mt-8 inline-flex h-11 items-center rounded-full bg-navy px-6 text-sm font-medium text-ivory"
-      >
-        Seguir viendo
-      </Link>
+
+      <ol className="mt-8 space-y-3 text-left">
+        {["Recibimos tu pedido y lo revisamos.", "Te contactamos para coordinar el pago y la entrega."].map((t, i) => (
+          <li key={t} className="flex items-start gap-3 rounded-2xl bg-powder/50 p-4">
+            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-navy text-xs font-bold text-ivory">{i + 1}</span>
+            <span className="text-[15px]">{t}</span>
+          </li>
+        ))}
+      </ol>
+
+      <div className="mt-8 flex flex-col gap-3">
+        {wa && (
+          <a
+            href={wa}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-14 items-center justify-center rounded-full bg-navy text-[15px] font-semibold text-ivory transition active:scale-[0.98]"
+          >
+            Escribirnos por WhatsApp
+          </a>
+        )}
+        <Link
+          href="/catalogo"
+          className={`inline-flex h-14 items-center justify-center rounded-full text-[15px] font-semibold transition active:scale-[0.98] ${
+            wa ? "bg-powder" : "bg-navy text-ivory"
+          }`}
+        >
+          Seguir viendo
+        </Link>
+      </div>
     </div>
   );
 }

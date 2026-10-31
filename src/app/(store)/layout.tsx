@@ -1,6 +1,7 @@
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { MobileNav } from "@/components/mobile-nav";
+import { CartToast } from "@/components/cart-toast";
 
 export default function StoreLayout({ children }: LayoutProps<"/">) {
   return (
@@ -17,8 +18,9 @@ export default function StoreLayout({ children }: LayoutProps<"/">) {
       </main>
       <SiteFooter />
       {/* espacio para que la barra inferior no tape el footer en móvil */}
-      <div className="h-20 md:hidden" aria-hidden />
+      <div className="h-[var(--mobile-nav-h)] md:hidden" aria-hidden />
       <MobileNav />
+      <CartToast />
     </>
   );
 }

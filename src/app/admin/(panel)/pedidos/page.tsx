@@ -49,7 +49,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/ped
 
   return (
     <>
-      <h1 className="font-serif text-4xl font-medium">Pedidos</h1>
+      <h1 className="font-display text-4xl font-semibold tracking-[-0.025em]">Pedidos</h1>
 
       <nav aria-label="Filtrar por estado" className="-mx-4 mt-6 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0">
         {tabs.map((t) => (

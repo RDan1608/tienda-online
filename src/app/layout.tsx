@@ -1,18 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { env } from "@/lib/env";
 import { site } from "@/lib/site";
 import "./globals.css";
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+// Una sola familia (moderna, geométrica, redondeada sin ser infantil): menos peso y más coherencia.
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
-});
-
-const cormorant = Cormorant_Garamond({
-  variable: "--font-cormorant",
-  subsets: ["latin"],
-  weight: ["500", "600"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -39,7 +35,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="es-HN" className={`${dmSans.variable} ${cormorant.variable} h-full`}>
+    <html lang="es-HN" className={`${jakarta.variable} h-full`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

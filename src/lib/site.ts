@@ -6,4 +6,7 @@ export const site = {
   // Texto informativo: la tienda no procesa pagos en línea.
   orderInfo:
     "Haz tu pedido en línea y te contactamos para coordinar el pago y la entrega.",
+  // WhatsApp de la tienda, solo dígitos con código de país (ej. "50499999999").
+  // Mientras esté vacío no se muestran botones de WhatsApp.
+  whatsapp: "",
 };

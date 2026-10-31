@@ -1,27 +1,35 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 
 const EASE_DRAWER = "cubic-bezier(0.32, 0.72, 0, 1)";
+
+const SheetClose = createContext<() => void>(() => {});
+
+/** Cierra la hoja actual CON animación (para botones dentro de la hoja). */
+export function useSheetClose() {
+  return useContext(SheetClose);
+}
 
 /**
  * Hoja inferior para móvil sobre <dialog> nativo (foco atrapado, Esc, inert gratis).
  * - Sale con animación (el cierre nativo es instantáneo).
  * - Se cierra arrastrando hacia abajo: con distancia o con un "flick" rápido (velocidad).
+ * - Dentro de la hoja, `useSheetClose()` cierra con animación.
  */
 export function FilterSheet({
   open,
   onClose,
   title,
-  actionLabel,
   children,
+  footer,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
-  actionLabel: string;
   children: React.ReactNode;
+  footer?: React.ReactNode;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -98,40 +106,38 @@ export function FilterSheet({
       }}
       onClick={(e) => e.target === dialog.current && requestClose()}
     >
-      <div ref={panel} className="sheet-panel flex max-h-[88dvh] flex-col rounded-t-3xl bg-ivory text-navy shadow-2xl">
+      <div ref={panel} className="sheet-panel flex max-h-[88dvh] flex-col rounded-t-[28px] bg-ivory text-navy shadow-float">
         <div
-          className="cursor-grab touch-none select-none border-b border-border px-5 pb-3 pt-2.5 active:cursor-grabbing"
+          className="cursor-grab touch-none select-none px-5 pb-2 pt-2.5 active:cursor-grabbing"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
         >
-          <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-dusty" aria-hidden />
+          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-dusty" aria-hidden />
           <div className="flex items-center justify-between">
-            <p className="font-serif text-2xl font-medium">{title}</p>
+            <p className="font-display text-xl font-bold tracking-[-0.025em]">{title}</p>
             <button
               type="button"
               onClick={requestClose}
               onPointerDown={(e) => e.stopPropagation()}
-              className="grid size-10 place-items-center rounded-full transition hover:bg-powder"
-              aria-label="Cerrar filtros"
+              className="grid size-10 place-items-center rounded-full transition hover:bg-powder active:scale-90"
+              aria-label={`Cerrar ${title.toLowerCase()}`}
             >
               <X className="size-5" />
             </button>
           </div>
         </div>
 
-        <div className="overflow-y-auto overscroll-contain px-5 py-5">{children}</div>
+        <SheetClose.Provider value={requestClose}>
+          <div className="overflow-y-auto overscroll-contain px-5 pb-3">{children}</div>
 
-        <div className="border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <button
-            type="button"
-            onClick={requestClose}
-            className="h-12 w-full rounded-full bg-navy text-sm font-medium text-ivory transition active:scale-[0.98]"
-          >
-            {actionLabel}
-          </button>
-        </div>
+          {footer && (
+            <div className="border-t border-border bg-ivory p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+              {footer}
+            </div>
+          )}
+        </SheetClose.Provider>
       </div>
     </dialog>
   );

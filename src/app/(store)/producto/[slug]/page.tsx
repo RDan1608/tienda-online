@@ -95,45 +95,64 @@ async function ProductDetail({ params }: Pick<PageProps<"/producto/[slug]">, "pa
           {product.category && (
             <Link
               href={`/catalogo?cat=${product.category.slug}`}
-              className="text-xs uppercase tracking-[0.16em] text-muted hover:text-navy"
+              className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted transition-colors hover:text-navy"
             >
               {product.category.name}
             </Link>
           )}
-          <h1 className="mt-2 font-serif text-4xl font-medium leading-tight text-balance sm:text-5xl">
+          <h1 className="mt-2 font-display text-[2rem] font-extrabold leading-[1.05] tracking-[-0.04em] text-balance sm:text-5xl">
             {product.name}
           </h1>
-          <p className="mt-4 text-2xl">{formatPrice(product.price)}</p>
 
-          <div className="mt-8 flex items-start gap-3">
-            <div className="flex-1">
-              <ProductBuy product={summary} />
-            </div>
+          <div className="mt-4 flex items-center justify-between gap-4">
+            <p className="font-display text-[1.75rem] font-extrabold tabular-nums tracking-[-0.03em]">
+              {formatPrice(product.price)}
+            </p>
             <FavoriteButton product={summary} variant="inline" />
           </div>
 
+          <div className="mt-6">
+            <ProductBuy product={summary} />
+          </div>
+
           {product.description && (
-            <div className="mt-6 whitespace-pre-line border-t border-border pt-6 leading-relaxed text-navy/85">
-              {product.description}
-            </div>
+            <section className="mt-6 rounded-3xl bg-surface p-5 shadow-soft ring-1 ring-border" aria-labelledby="detalles">
+              <h2 id="detalles" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+                Detalles
+              </h2>
+              <p className="mt-2 whitespace-pre-line leading-relaxed text-navy/90">{product.description}</p>
+              {product.tags.length > 0 && (
+                <p className="mt-4 flex flex-wrap items-center gap-x-1 gap-y-1 border-t border-border pt-4 text-sm">
+                  <span className="text-muted">Estilo:</span>
+                  {product.tags.map((t, i) => (
+                    <span key={t}>
+                      <Link
+                        href={`/catalogo?tag=${encodeURIComponent(t)}`}
+                        className="font-semibold capitalize underline-offset-4 hover:underline"
+                      >
+                        {t}
+                      </Link>
+                      {i < product.tags.length - 1 && ","}
+                    </span>
+                  ))}
+                </p>
+              )}
+            </section>
           )}
 
-          {product.tags.length > 0 && (
-            <ul className="mt-6 flex flex-wrap gap-2">
-              {product.tags.map((t) => (
-                <li key={t}>
-                  <Link
-                    href={`/catalogo?tag=${encodeURIComponent(t)}`}
-                    className="inline-flex h-8 items-center rounded-full bg-powder px-3 text-xs capitalize hover:bg-dusty/60"
-                  >
-                    {t}
-                  </Link>
+          <section className="mt-4 rounded-3xl bg-butter p-5" aria-labelledby="como-pedir">
+            <h2 id="como-pedir" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-honey-ink">
+              Cómo funciona tu pedido
+            </h2>
+            <ol className="mt-3 space-y-2.5 text-[15px]">
+              {["Agrega lo que te guste a tu pedido.", "Déjanos tu nombre y teléfono; no se cobra nada.", "Te contactamos para coordinar pago y entrega."].map((t, i) => (
+                <li key={t} className="flex items-start gap-3">
+                  <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-honey text-[11px] font-bold">{i + 1}</span>
+                  {t}
                 </li>
               ))}
-            </ul>
-          )}
-
-          <p className="mt-8 rounded-2xl bg-powder/50 p-4 text-sm text-muted">{site.orderInfo}</p>
+            </ol>
+          </section>
         </div>
       </div>
 
@@ -149,7 +168,7 @@ async function Related({ product }: { product: Parameters<typeof getRelated>[0] 
   if (!related.length) return null;
   return (
     <section className="mt-24">
-      <h2 className="mb-6 font-serif text-3xl font-medium">También te puede gustar</h2>
+      <h2 className="mb-6 font-display text-3xl font-semibold tracking-[-0.025em]">También te puede gustar</h2>
       <ProductGrid products={related} />
     </section>
   );

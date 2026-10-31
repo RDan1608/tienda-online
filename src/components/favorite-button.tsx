@@ -24,23 +24,32 @@ export function FavoriteButton({
       type="button"
       onClick={(e) => {
         e.preventDefault();
-        if (!active) setPopping(true); // el pulso solo al agregar, no al quitar
+        if (!active) setPopping(true); // el pulso y los destellos solo al agregar, no al quitar
         toggle(product);
       }}
       aria-pressed={active}
       aria-label={label}
       title={label}
-      className={
+      className={`relative grid place-items-center rounded-full transition-[transform,background-color,border-color] duration-150 ease-out before:absolute before:-inset-1 active:scale-90 ${
         variant === "floating"
-          ? "grid size-9 place-items-center rounded-full bg-ivory/85 text-navy backdrop-blur transition hover:bg-ivory active:scale-90"
-          : "grid size-12 shrink-0 place-items-center rounded-full border border-border text-navy transition hover:border-steel active:scale-90"
-      }
+          ? `size-9 shadow-soft backdrop-blur ${active ? "bg-blush" : "bg-ivory/90 hover:bg-ivory"}`
+          : `size-12 shrink-0 border ${active ? "border-rose/40 bg-blush" : "border-border hover:border-steel"}`
+      }`}
     >
       <Heart
-        className={`size-[18px] transition-colors duration-200 ${active ? "fill-navy" : ""} ${popping ? "pop" : ""}`}
+        className={`transition-colors duration-200 ${variant === "inline" ? "size-[22px]" : "size-[18px]"} ${
+          active ? "fill-rose text-rose" : "text-navy"
+        } ${popping ? "pop" : ""}`}
         onAnimationEnd={() => setPopping(false)}
-        strokeWidth={1.75}
+        strokeWidth={1.9}
       />
+      {popping && (
+        <span aria-hidden className="burst">
+          {[0, 60, 120, 180, 240, 300].map((a) => (
+            <i key={a} style={{ "--a": `${a}deg` } as React.CSSProperties} />
+          ))}
+        </span>
+      )}
     </button>
   );
 }

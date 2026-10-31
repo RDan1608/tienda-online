@@ -1,24 +1,30 @@
 import Link from "next/link";
+import { CategoryArt } from "@/components/illustrations";
 
+/** Estado vacío con ilustración propia (no un hueco): invita a seguir explorando. */
 export function EmptyState({
-  icon,
+  art,
   title,
   text,
+  cta = "Explorar catálogo",
+  href = "/catalogo",
 }: {
-  icon: React.ReactNode;
+  art: string;
   title: string;
   text: string;
+  cta?: string;
+  href?: string;
 }) {
   return (
-    <div className="mt-8 rounded-3xl bg-powder/50 px-6 py-16 text-center">
-      <div className="mx-auto grid size-14 place-items-center rounded-full bg-ivory text-steel">{icon}</div>
-      <p className="mt-4 font-serif text-2xl">{title}</p>
-      <p className="mt-2 text-sm text-muted">{text}</p>
+    <div className="card-in mt-6 rounded-[28px] bg-powder/50 px-6 py-12 text-center">
+      <CategoryArt slug={art} className="mx-auto w-32" />
+      <p className="mt-4 font-display text-2xl font-bold tracking-[-0.03em]">{title}</p>
+      <p className="mx-auto mt-2 max-w-xs text-[15px] leading-relaxed text-muted">{text}</p>
       <Link
-        href="/catalogo"
-        className="mt-6 inline-flex h-11 items-center rounded-full bg-navy px-6 text-sm font-medium text-ivory"
+        href={href}
+        className="mt-6 inline-flex h-12 items-center rounded-full bg-navy px-7 text-[15px] font-semibold text-ivory transition active:scale-95"
       >
-        Explorar catálogo
+        {cta}
       </Link>
     </div>
   );

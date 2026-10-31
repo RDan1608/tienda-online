@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { storageUrl } from "@/lib/env";
-import { CategoryIcon } from "@/components/category-icon";
+import { CategoryArt, categoryTone, defaultTone } from "@/components/illustrations";
 
 type Props = {
   path: string | null;
@@ -20,7 +20,7 @@ export function ProductImage({ path, alt, categorySlug, sizes, priority, classNa
   const [loaded, setLoaded] = useState(!!priority);
 
   return (
-    <div className={`relative aspect-[4/5] overflow-hidden rounded-2xl bg-powder ${className}`}>
+    <div className={`relative aspect-[4/5] overflow-hidden rounded-[20px] bg-powder ${className}`}>
       {path ? (
         <Image
           src={storageUrl(path)}
@@ -38,8 +38,16 @@ export function ProductImage({ path, alt, categorySlug, sizes, priority, classNa
           }`}
         />
       ) : (
-        <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-powder to-dusty/60">
-          <CategoryIcon slug={categorySlug} className="size-10 text-steel" strokeWidth={1.25} />
+        // Sin foto: un fondo propio de la categoría, puntos sutiles y su ilustración (nunca un hueco vacío).
+        <div
+          className="absolute inset-0 grid place-items-center"
+          style={{
+            backgroundColor: (categorySlug && categoryTone[categorySlug]) || defaultTone,
+            backgroundImage: "radial-gradient(rgb(54 77 102 / 0.07) 1px, transparent 1.2px)",
+            backgroundSize: "14px 14px",
+          }}
+        >
+          <CategoryArt slug={categorySlug} className="w-3/5 drop-shadow-[0_6px_10px_rgb(54_77_102/0.12)]" />
         </div>
       )}
     </div>

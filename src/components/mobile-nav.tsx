@@ -9,10 +9,10 @@ const items = [
   { href: "/", label: "Inicio", icon: House, count: null },
   { href: "/catalogo", label: "Catálogo", icon: LayoutGrid, count: null },
   { href: "/favoritos", label: "Favoritos", icon: Heart, count: "favs" },
-  { href: "/carrito", label: "Carrito", icon: ShoppingBag, count: "cart" },
+  { href: "/carrito", label: "Pedido", icon: ShoppingBag, count: "cart" },
 ] as const;
 
-/** Barra inferior fija, solo en móvil. */
+/** Barra inferior fija, solo en móvil. La opción activa lleva una píldora navy que se desliza. */
 export function MobileNav() {
   const pathname = usePathname();
   const counts = useCounts();
@@ -21,17 +21,18 @@ export function MobileNav() {
   return (
     <nav
       aria-label="Navegación principal"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-ivory/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-ivory/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-16px_rgb(54_77_102/0.35)] backdrop-blur-md md:hidden"
     >
       <ul className="relative grid grid-cols-4">
-        {/* indicador: se desliza (transform) hacia la pestaña activa */}
+        {/* Píldora activa: una sola, se desliza (transform) hacia la pestaña elegida */}
         <li
           aria-hidden
-          className="pointer-events-none absolute left-0 top-0 w-1/4 transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
+          className="pointer-events-none absolute left-0 top-2 w-1/4 transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
           style={{ transform: `translateX(${Math.max(activeIndex, 0) * 100}%)`, opacity: activeIndex < 0 ? 0 : 1 }}
         >
-          <span className="mx-auto block h-0.5 w-9 rounded-full bg-navy" />
+          <span key={activeIndex} className="pill-land mx-auto block h-8 w-16 rounded-full bg-navy" />
         </li>
+
         {items.map(({ href, label, icon: Icon, count }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
@@ -39,15 +40,23 @@ export function MobileNav() {
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`flex flex-col items-center gap-1 py-2.5 text-[11px] transition-[color,transform] duration-150 active:scale-95 ${
-                  active ? "text-navy" : "text-muted"
-                }`}
+                className="group flex flex-col items-center gap-1 pb-2 pt-2 transition-transform duration-150 active:scale-95"
               >
-                <span className="relative">
-                  <Icon className="size-[22px]" strokeWidth={active ? 2 : 1.5} />
-                  {count && <Badge value={counts[count]} />}
+                <span
+                  className={`relative grid h-8 w-16 place-items-center transition-colors duration-200 ${
+                    active ? "text-ivory" : "text-muted"
+                  }`}
+                >
+                  <Icon className="size-[22px]" strokeWidth={active ? 2.25 : 1.6} />
+                  {count && <Badge value={counts[count]} tone={count === "cart" ? "rose" : "navy"} ring />}
                 </span>
-                {label}
+                <span
+                  className={`text-[11px] leading-none transition-colors duration-200 ${
+                    active ? "font-bold text-navy" : "font-medium text-muted"
+                  }`}
+                >
+                  {label}
+                </span>
               </Link>
             </li>
           );
