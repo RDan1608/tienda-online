@@ -9,7 +9,7 @@ import { site } from "@/lib/site";
 import { toSummary } from "@/lib/types";
 import { getProductBySlug, getRelated, getStaticProductSlugs } from "@/lib/data/catalog";
 import { ProductGrid, ProductGridSkeleton } from "@/components/product-card";
-import { AddToCart } from "@/components/add-to-cart";
+import { ProductBuy } from "@/components/product-buy";
 import { FavoriteButton } from "@/components/favorite-button";
 import { Gallery } from "./gallery";
 
@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: PageProps<"/producto/[slug]">
 
 export default function ProductPage({ params }: PageProps<"/producto/[slug]">) {
   return (
-    <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 sm:pt-10">
+    <div className="mx-auto max-w-6xl px-4 pt-6 max-md:pb-20 sm:px-6 sm:pt-10">
       <Link
         href="/catalogo"
         className="mb-6 inline-flex items-center gap-1 text-sm text-muted hover:text-navy"
@@ -107,7 +107,7 @@ async function ProductDetail({ params }: Pick<PageProps<"/producto/[slug]">, "pa
 
           <div className="mt-8 flex items-start gap-3">
             <div className="flex-1">
-              <AddToCart product={summary} />
+              <ProductBuy product={summary} />
             </div>
             <FavoriteButton product={summary} variant="inline" />
           </div>

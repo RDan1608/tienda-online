@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { createSerializer } from "nuqs/server";
-import { catalogParsers, loadCatalogParams } from "@/lib/catalog-params";
-import { getCategories, getProducts, getTagFacets } from "@/lib/data/catalog";
-import { ProductGrid, ProductGridSkeleton } from "@/components/product-card";
-import { CatalogShell } from "./catalog-filters";
+import { getCatalogItems, getCategories } from "@/lib/data/catalog";
+import { ProductGridSkeleton } from "@/components/product-card";
+import { CatalogClient } from "./catalog-client";
 
 export const metadata: Metadata = {
   title: "Catálogo",
@@ -14,60 +12,29 @@ export const metadata: Metadata = {
   alternates: { canonical: "/catalogo" },
 };
 
-const serialize = createSerializer(catalogParsers);
-
-export default function CatalogPage({ searchParams }: PageProps<"/catalogo">) {
+export default function CatalogPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 pt-8 sm:px-6 sm:pt-12">
       <h1 className="mb-6 font-serif text-4xl font-medium sm:text-5xl">Catálogo</h1>
       <Suspense fallback={<CatalogFallback />}>
-        <Catalog searchParams={searchParams} />
+        <Catalog />
       </Suspense>
     </div>
   );
 }
 
-async function Catalog({ searchParams }: Pick<PageProps<"/catalogo">, "searchParams">) {
-  const filters = loadCatalogParams(await searchParams);
-  const [categories, tags, { products, total, page }] = await Promise.all([
-    getCategories(),
-    getTagFacets(),
-    getProducts(filters),
-  ]);
+// Los datos son los mismos para todos y están en caché: el servidor solo los entrega una vez;
+// después filtrar, ordenar y buscar ocurre en el navegador, sin esperas.
+async function Catalog() {
+  // Se genera en cada petición para que el HTML ya llegue con los filtros de la URL aplicados
+  // (productos visibles para buscadores, sin esqueleto ni salto al abrir un link filtrado).
+  await connection();
+  const [items, categories] = await Promise.all([getCatalogItems(), getCategories()]);
 
   return (
-    // El adaptador de nuqs solo se necesita aquí: así el resto de páginas no descarga esa librería.
+    // El adaptador de nuqs solo se necesita aquí: el resto de páginas no descarga esa librería.
     <NuqsAdapter>
-    <CatalogShell categories={categories} tags={tags} total={total}>
-      {products.length ? (
-        <>
-          <h2 className="sr-only">Productos</h2>
-          <ProductGrid products={products} priorityCount={4} />
-          {products.length < total && (
-            <div className="mt-12 flex justify-center">
-              <Link
-                href={serialize("/catalogo", { ...filters, page: page + 1 })}
-                scroll={false}
-                className="inline-flex h-12 items-center rounded-full border border-border px-8 text-sm font-medium transition hover:border-steel"
-              >
-                Ver más ({total - products.length})
-              </Link>
-            </div>
-          )}
-        </>
-      ) : (
-        <div className="rounded-3xl bg-powder/50 px-6 py-16 text-center">
-          <p className="font-serif text-2xl">No encontramos productos</p>
-          <p className="mt-2 text-sm text-muted">Prueba con otra búsqueda o quita algunos filtros.</p>
-          <Link
-            href="/catalogo"
-            className="mt-6 inline-flex h-11 items-center rounded-full bg-navy px-6 text-sm font-medium text-ivory"
-          >
-            Ver todo el catálogo
-          </Link>
-        </div>
-      )}
-    </CatalogShell>
+      <CatalogClient items={items} categories={categories} />
     </NuqsAdapter>
   );
 }

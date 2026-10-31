@@ -1,11 +1,10 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
-import type { CatalogFilters } from "@/lib/catalog-params";
-import type { Category, Product } from "@/lib/types";
+import { normalizeText } from "@/lib/search";
+import type { CatalogItem, Category, Product } from "@/lib/types";
 
 // Todo lo del catálogo comparte el tag "catalog": el admin lo invalida al editar.
 export const CATALOG_TAG = "catalog";
-export const PAGE_SIZE = 12;
 
 const PRODUCT_FIELDS =
   "id, name, slug, description, price, tags, is_featured, sold_count, created_at, images:product_images(path, alt, sort_order)";
@@ -21,11 +20,6 @@ function normalize(rows: unknown[] | null): Product[] {
   }));
 }
 
-// Quita caracteres con significado en la sintaxis de filtros de PostgREST.
-function sanitizeSearch(q: string) {
-  return q.replace(/[,()%*\\:"']/g, " ").trim().slice(0, 60);
-}
-
 export async function getCategories(): Promise<Category[]> {
   "use cache";
   cacheLife("hours");
@@ -39,69 +33,37 @@ export async function getCategories(): Promise<Category[]> {
   return data;
 }
 
-export async function getProducts(f: CatalogFilters) {
-  "use cache";
-  cacheLife("hours");
-  cacheTag(CATALOG_TAG);
-
-  let query = createPublicClient()
-    .from("products")
-    .select(f.cat.length ? SELECT_INNER : SELECT, { count: "exact" })
-    .eq("is_active", true);
-
-  if (f.cat.length) query = query.in("category.slug", f.cat);
-  if (f.tag.length) query = query.overlaps("tags", f.tag);
-  if (f.min != null) query = query.gte("price", f.min);
-  if (f.max != null) query = query.lte("price", f.max);
-
-  const q = sanitizeSearch(f.q);
-  if (q) query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%`);
-
-  switch (f.sort) {
-    case "popular":
-      query = query
-        .order("sold_count", { ascending: false })
-        .order("is_featured", { ascending: false });
-      break;
-    case "precio-asc":
-      query = query.order("price", { ascending: true });
-      break;
-    case "precio-desc":
-      query = query.order("price", { ascending: false });
-      break;
-    default:
-      query = query.order("created_at", { ascending: false });
-  }
-
-  // "Ver más" acumulativo: la página N muestra los primeros N * PAGE_SIZE.
-  const page = Math.min(Math.max(f.page, 1), 20);
-  const { data, count, error } = await query
-    .order("id")
-    .range(0, page * PAGE_SIZE - 1);
-  if (error) throw error;
-
-  return { products: normalize(data), total: count ?? 0, page };
-}
-
-/** Tags disponibles con su conteo, para los filtros. */
-export async function getTagFacets() {
+/**
+ * Todos los productos activos, livianos, para filtrar/ordenar/buscar en el navegador sin
+ * ir al servidor en cada clic. Para una tienda de cientos de productos pesa pocos KB.
+ */
+export async function getCatalogItems(): Promise<CatalogItem[]> {
   "use cache";
   cacheLife("hours");
   cacheTag(CATALOG_TAG);
 
   const { data, error } = await createPublicClient()
     .from("products")
-    .select("tags")
-    .eq("is_active", true);
+    .select(SELECT)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .limit(1000);
   if (error) throw error;
 
-  const counts = new Map<string, number>();
-  for (const row of data) {
-    for (const t of row.tags as string[]) counts.set(t, (counts.get(t) ?? 0) + 1);
-  }
-  return [...counts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "es"))
-    .map(([tag, count]) => ({ tag, count }));
+  return normalize(data).map((p) => ({
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    price: p.price,
+    tags: p.tags,
+    is_featured: p.is_featured,
+    sold_count: p.sold_count,
+    created_at: p.created_at,
+    category: p.category,
+    images: p.images.slice(0, 1),
+    // Texto ya normalizado (sin tildes ni mayúsculas) para buscar rápido.
+    search: normalizeText(`${p.name} ${p.category?.name ?? ""} ${p.tags.join(" ")} ${p.description.slice(0, 300)}`),
+  }));
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {

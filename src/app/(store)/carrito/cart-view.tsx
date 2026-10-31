@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { CircleCheck, LoaderCircle, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import { formatPrice } from "@/lib/format";
@@ -134,9 +134,15 @@ export function CartView() {
 function CartRow({ item }: { item: CartItem }) {
   const setQty = useCart((s) => s.setQty);
   const remove = useCart((s) => s.remove);
+  const [leaving, setLeaving] = useState(false);
+  // Se pliega y desvanece, y recién entonces sale del carrito.
+  const leave = () => {
+    setLeaving(true);
+    setTimeout(() => remove(item.id), 280);
+  };
 
   return (
-    <SummaryRow product={item} meta={<p className="shrink-0 font-medium">{formatPrice(item.price * item.qty)}</p>}>
+    <SummaryRow leaving={leaving} product={item} meta={<p className="shrink-0 font-medium">{formatPrice(item.price * item.qty)}</p>}>
       <div className="flex items-center justify-between">
         <div className="flex h-9 items-center rounded-full border border-border">
           <button
@@ -160,7 +166,7 @@ function CartRow({ item }: { item: CartItem }) {
         </div>
         <button
           type="button"
-          onClick={() => remove(item.id)}
+          onClick={leave}
           className="inline-flex items-center gap-1 text-sm text-muted hover:text-navy"
         >
           <X className="size-4" /> Quitar

@@ -8,13 +8,22 @@ export function SummaryRow({
   product,
   children,
   meta,
+  leaving = false,
 }: {
   product: ProductSummary;
   children?: React.ReactNode;
   meta?: React.ReactNode;
+  /** true mientras se anima su salida (se pliega y se desvanece) */
+  leaving?: boolean;
 }) {
   return (
-    <li className="flex gap-4 py-5">
+    <li
+      className={`grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+        leaving ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr]"
+      }`}
+    >
+      <div className="min-h-0 overflow-hidden">
+        <div className="flex gap-4 py-5">
       <Link href={`/producto/${product.slug}`} className="w-20 shrink-0 sm:w-24">
         <ProductImage
           path={product.imagePath}
@@ -32,6 +41,8 @@ export function SummaryRow({
           {meta ?? <p className="shrink-0 font-medium">{formatPrice(product.price)}</p>}
         </div>
         <div className="mt-auto pt-3">{children}</div>
+      </div>
+        </div>
       </div>
     </li>
   );

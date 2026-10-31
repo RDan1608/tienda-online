@@ -8,6 +8,11 @@
   --navy: #364d66;
   --ivory: #f7f6f2;
 
+  /* Movimiento: salidas rápidas y con carácter; nunca ease-in en la interfaz */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
   --background: var(--ivory);
   --foreground: var(--navy);
   --surface: #ffffff;
@@ -57,6 +62,7 @@ body {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
   }
 }
@@ -75,4 +81,156 @@ body {
 :focus-visible {
   outline: 2px solid var(--steel);
   outline-offset: 2px;
+}
+
+/* ───────── Entradas ───────── */
+/* Las entradas arrancan semitransparentes, nunca en 0: un elemento totalmente transparente no
+   cuenta como "contenido pintado" y retrasaría el LCP (el título o la primera foto). */
+@keyframes rise {
+  from {
+    opacity: 0.35;
+    transform: translateY(10px) scale(0.985);
+  }
+}
+/* Tarjetas y bloques que aparecen: escalonado corto (35 ms) y limitado para no hacer esperar. */
+.card-in {
+  animation: rise 420ms var(--ease-out) backwards;
+  animation-delay: calc(min(var(--i, 0), 8) * 35ms);
+}
+@keyframes page-in {
+  from {
+    opacity: 0.4;
+    transform: translateY(6px);
+  }
+}
+.page-in {
+  animation: page-in 260ms var(--ease-out) backwards;
+}
+@keyframes pill-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+.pill-in {
+  animation: pill-in 160ms var(--ease-out) backwards;
+}
+/* Pulso para confirmar una acción (favorito, contador del carrito). */
+@keyframes pop {
+  40% {
+    transform: scale(1.28);
+  }
+}
+.pop {
+  animation: pop 320ms var(--ease-out);
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* ───────── Hoja de filtros (móvil) ───────── */
+.sheet {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  overflow: hidden;
+}
+.sheet[open] {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.sheet::backdrop {
+  background: rgb(54 77 102 / 0.38);
+  animation: fade-in 220ms ease-out;
+}
+.sheet[data-closing]::backdrop {
+  animation: fade-out 220ms ease-out forwards;
+}
+.sheet-panel {
+  animation: sheet-in 340ms var(--ease-drawer);
+  touch-action: pan-y;
+}
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
+/* ───────── Slider de precio (dos inputs nativos superpuestos) ───────── */
+.range {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  pointer-events: none;
+}
+.range::-webkit-slider-runnable-track {
+  background: transparent;
+}
+.range::-moz-range-track {
+  background: transparent;
+}
+.range::-webkit-slider-thumb {
+  appearance: none;
+  pointer-events: auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 2px solid var(--navy);
+  box-shadow: 0 1px 5px rgb(54 77 102 / 0.28);
+  cursor: grab;
+  transition: transform 160ms var(--ease-out);
+}
+.range::-moz-range-thumb {
+  pointer-events: auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 2px solid var(--navy);
+  box-shadow: 0 1px 5px rgb(54 77 102 / 0.28);
+  cursor: grab;
+  transition: transform 160ms var(--ease-out);
+}
+.range:active::-webkit-slider-thumb {
+  transform: scale(1.12);
+  cursor: grabbing;
+}
+.range:active::-moz-range-thumb {
+  transform: scale(1.12);
+  cursor: grabbing;
+}
+.range:focus-visible {
+  outline: none;
+}
+.range:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--steel);
+  outline-offset: 2px;
+}
+.range:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--steel);
+  outline-offset: 2px;
+}
+
+/* El buscador ya trae su propio botón de borrar */
+input[type="search"]::-webkit-search-cancel-button {
+  display: none;
 }

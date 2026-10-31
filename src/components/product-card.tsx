@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
-import { toSummary, type Product } from "@/lib/types";
+import { toSummary, type CardProduct } from "@/lib/types";
 import { ProductImage } from "@/components/product-image";
 import { FavoriteButton } from "@/components/favorite-button";
 
-export function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
+export function ProductCard({ product, priority }: { product: CardProduct; priority?: boolean }) {
   const image = product.images[0];
 
   return (
@@ -35,11 +35,13 @@ export function ProductCard({ product, priority }: { product: Product; priority?
   );
 }
 
-export function ProductGrid({ products, priorityCount = 0 }: { products: Product[]; priorityCount?: number }) {
+export function ProductGrid({ products, priorityCount = 0 }: { products: CardProduct[]; priorityCount?: number }) {
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
       {products.map((p, i) => (
-        <ProductCard key={p.id} product={p} priority={i < priorityCount} />
+        <div key={p.id} className="card-in" style={{ "--i": i } as React.CSSProperties}>
+          <ProductCard product={p} priority={i < priorityCount} />
+        </div>
       ))}
     </div>
   );

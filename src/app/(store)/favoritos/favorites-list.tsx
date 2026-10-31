@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Heart, ShoppingBag } from "lucide-react";
 import { useCart, useFavorites, useHydrated } from "@/lib/stores";
+import type { ProductSummary } from "@/lib/types";
 import { useFreshProducts } from "@/lib/use-fresh-products";
 import { SummaryRow } from "@/components/summary-row";
 import { EmptyState } from "@/components/empty-state";
@@ -10,9 +12,7 @@ import { EmptyState } from "@/components/empty-state";
 export function FavoritesList() {
   const hydrated = useHydrated();
   const items = useFavorites((s) => s.items);
-  const remove = useFavorites((s) => s.remove);
   const sync = useFavorites((s) => s.sync);
-  const addToCart = useCart((s) => s.add);
   const removed = useFreshProducts(
     items.map((i) => i.id),
     hydrated,
@@ -41,29 +41,42 @@ export function FavoritesList() {
       )}
       <ul className="mt-6 divide-y divide-border border-y border-border">
         {items.map((p) => (
-          <SummaryRow key={p.id} product={p}>
-            <div className="flex items-center gap-4 text-sm">
-              <button
-                type="button"
-                onClick={() => addToCart(p)}
-                className="inline-flex h-9 items-center gap-1.5 rounded-full bg-navy px-4 text-ivory transition active:scale-95"
-              >
-                <ShoppingBag className="size-4" /> Agregar
-              </button>
-              <button
-                type="button"
-                onClick={() => remove(p.id)}
-                className="text-muted underline-offset-4 hover:text-navy hover:underline"
-              >
-                Quitar
-              </button>
-            </div>
-          </SummaryRow>
+          <FavoriteRow key={p.id} product={p} />
         ))}
       </ul>
       <Link href="/carrito" className="mt-6 inline-block text-sm underline underline-offset-4">
         Ir al carrito
       </Link>
     </>
+  );
+}
+
+function FavoriteRow({ product: p }: { product: ProductSummary }) {
+  const remove = useFavorites((s) => s.remove);
+  const addToCart = useCart((s) => s.add);
+  const [leaving, setLeaving] = useState(false);
+
+  return (
+    <SummaryRow product={p} leaving={leaving}>
+      <div className="flex items-center gap-4 text-sm">
+        <button
+          type="button"
+          onClick={() => addToCart(p)}
+          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-navy px-4 text-ivory transition active:scale-95"
+        >
+          <ShoppingBag className="size-4" /> Agregar
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setLeaving(true);
+            setTimeout(() => remove(p.id), 280);
+          }}
+          className="text-muted underline-offset-4 hover:text-navy hover:underline"
+        >
+          Quitar
+        </button>
+      </div>
+    </SummaryRow>
   );
 }

@@ -1,13 +1,24 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Heart, Search, ShoppingBag } from "lucide-react";
 import { cartCount, useCart, useFavorites, useHydrated } from "@/lib/stores";
 
-function Badge({ value }: { value: number }) {
+export function Badge({ value }: { value: number }) {
+  // Estado derivado durante el render (patrón recomendado): detecta cuando el número SUBE.
+  const [prev, setPrev] = useState(value);
+  const [bump, setBump] = useState(0);
+  if (value !== prev) {
+    setPrev(value);
+    if (prev > 0 && value > prev) setBump((b) => b + 1);
+  }
+
   if (!value) return null;
   return (
-    <span className="absolute -right-1 -top-1 grid min-w-[18px] place-items-center rounded-full bg-navy px-1 text-[10px] font-medium leading-[18px] text-ivory">
+    <span
+      key={bump}
+      className={`${bump ? "pop" : "pill-in"} absolute -right-1 -top-1 grid min-w-[18px] place-items-center rounded-full bg-navy px-1 text-[10px] font-medium leading-[18px] text-ivory`}>
       {value > 99 ? "99+" : value}
     </span>
   );
@@ -42,4 +53,3 @@ export function HeaderActions() {
   );
 }
 
-export { Badge };

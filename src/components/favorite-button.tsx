@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Heart } from "lucide-react";
 import { useFavorites, useHydrated } from "@/lib/stores";
 import type { ProductSummary } from "@/lib/types";
@@ -12,6 +13,7 @@ export function FavoriteButton({
   variant?: "floating" | "inline";
 }) {
   const hydrated = useHydrated();
+  const [popping, setPopping] = useState(false);
   const toggle = useFavorites((s) => s.toggle);
   const active = useFavorites((s) => s.items.some((i) => i.id === product.id)) && hydrated;
 
@@ -22,6 +24,7 @@ export function FavoriteButton({
       type="button"
       onClick={(e) => {
         e.preventDefault();
+        if (!active) setPopping(true); // el pulso solo al agregar, no al quitar
         toggle(product);
       }}
       aria-pressed={active}
@@ -34,7 +37,8 @@ export function FavoriteButton({
       }
     >
       <Heart
-        className={`size-[18px] transition-colors ${active ? "fill-navy" : ""}`}
+        className={`size-[18px] transition-colors duration-200 ${active ? "fill-navy" : ""} ${popping ? "pop" : ""}`}
+        onAnimationEnd={() => setPopping(false)}
         strokeWidth={1.75}
       />
     </button>

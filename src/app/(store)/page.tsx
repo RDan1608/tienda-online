@@ -29,12 +29,17 @@ export default async function Home() {
 
   return (
     <>
-      <section className="mx-auto max-w-6xl px-4 pb-14 pt-12 sm:px-6 sm:pt-20">
-        <p className="text-xs uppercase tracking-[0.22em] text-muted">{site.description}</p>
-        <h1 className="mt-4 max-w-3xl font-serif text-5xl font-medium leading-[1.05] text-balance sm:text-7xl">
+      <section className="relative mx-auto max-w-6xl px-4 pb-14 pt-12 sm:px-6 sm:pt-20">
+        {/* formas suaves de la paleta: dan profundidad sin ruido ni movimiento continuo */}
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 -top-10 -z-10 h-[28rem] overflow-hidden">
+          <div className="absolute -right-24 -top-24 size-[26rem] rounded-full bg-powder/80 blur-3xl" />
+          <div className="absolute right-1/3 top-32 size-72 rounded-full bg-dusty/25 blur-3xl" />
+        </div>
+        <p className="card-in text-xs uppercase tracking-[0.22em] text-muted" style={{ "--i": 0 } as React.CSSProperties}>{site.description}</p>
+        <h1 className="card-in mt-4 max-w-3xl font-serif text-5xl font-medium leading-[1.05] text-balance sm:text-7xl" style={{ "--i": 1 } as React.CSSProperties}>
           {site.tagline}
         </h1>
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div className="card-in mt-8 flex flex-wrap gap-3" style={{ "--i": 2 } as React.CSSProperties}>
           <Link
             href="/catalogo"
             className="inline-flex h-12 items-center gap-2 rounded-full bg-navy px-6 text-sm font-medium text-ivory transition hover:bg-navy/90 active:scale-[0.98]"
@@ -53,11 +58,11 @@ export default async function Home() {
       <section aria-labelledby="categorias" className="mx-auto max-w-6xl px-4 sm:px-6">
         <h2 id="categorias" className="sr-only">Categorías</h2>
         <ul className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:px-0 lg:grid-cols-6">
-          {categories.map((c) => (
-            <li key={c.id} className="snap-start">
+          {categories.map((c, i) => (
+            <li key={c.id} className="card-in snap-start" style={{ "--i": i + 2 } as React.CSSProperties}>
               <Link
                 href={`/catalogo?cat=${c.slug}`}
-                className="flex w-32 flex-col items-center gap-3 rounded-2xl bg-powder/60 px-3 py-6 text-center text-sm transition hover:bg-powder sm:w-auto"
+                className="flex w-32 flex-col items-center gap-3 rounded-2xl bg-powder/60 px-3 py-6 text-center text-sm transition-[transform,background-color] duration-200 ease-out hover:-translate-y-0.5 hover:bg-powder active:scale-[0.97] sm:w-auto"
               >
                 <CategoryIcon slug={c.slug} className="size-7 text-steel" strokeWidth={1.25} />
                 {c.name}
