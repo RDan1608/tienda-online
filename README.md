@@ -35,7 +35,7 @@ select id from auth.users where email = 'nuevo@ejemplo.com';
 - [x] 1 · Catálogo público + filtros + detalle
 - [x] 2 · Carrito, favoritos, pedido (email listo; falta RESEND_API_KEY)
 - [x] 3 · Admin: login, CRUD productos/imágenes/categorías
-- [ ] 4 · Admin: pedidos, realtime, email
+- [x] 4 · Admin: pedidos, realtime, email (varios destinatarios en ORDER_NOTIFY_EMAIL)
 - [ ] 5 · Más vendidos, SEO, QA, cron anti-pausa
 
 ## Datos de demostración

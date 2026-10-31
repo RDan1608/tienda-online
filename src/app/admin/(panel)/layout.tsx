@@ -12,7 +12,7 @@ export default function PanelLayout({ children }: LayoutProps<"/admin">) {
 }
 
 async function Gate({ children }: { children: React.ReactNode }) {
-  const { user, isAdmin } = await getAdmin();
+  const { supabase, user, isAdmin } = await getAdmin();
 
   // El proxy ya mandó a /admin/login si no hay sesión; aquí cubrimos usuarios sin rol.
   if (!user || !isAdmin) {
@@ -33,9 +33,14 @@ async function Gate({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const { count: newOrders } = await supabase
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "nuevo");
+
   return (
     <div className="min-h-dvh bg-ivory">
-      <AdminNav email={user.email ?? ""} signOutAction={signOut} />
+      <AdminNav email={user.email ?? ""} newOrders={newOrders ?? 0} signOutAction={signOut} />
       <main className="mx-auto max-w-5xl px-4 pb-24 pt-6 sm:px-6 sm:pt-10">{children}</main>
     </div>
   );

@@ -19,8 +19,12 @@ const escape = (s: string) =>
 /** Notifica al admin de un pedido nuevo. Sin RESEND_API_KEY no hace nada. */
 export async function sendNewOrderEmail(order: NewOrder) {
   const apiKey = process.env.RESEND_API_KEY;
-  const to = process.env.ORDER_NOTIFY_EMAIL;
-  if (!apiKey || !to) return;
+  // ORDER_NOTIFY_EMAIL admite varios correos separados por coma.
+  const recipients = (process.env.ORDER_NOTIFY_EMAIL ?? "")
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+  if (!apiKey || !recipients.length) return;
 
   // Nombres y precios desde la BD (datos públicos), no desde el cliente.
   const { data: products } = await createPublicClient()
@@ -46,18 +50,22 @@ export async function sendNewOrderEmail(order: NewOrder) {
   <p style="margin:0">Tel: <a href="tel:${escape(c.phone)}">${escape(c.phone)}</a></p>
   ${c.email ? `<p style="margin:0">Email: ${escape(c.email)}</p>` : ""}
   ${c.notes ? `<p style="margin:12px 0 0;white-space:pre-line">Notas: ${escape(c.notes)}</p>` : ""}
-  <p style="margin:24px 0 0"><a href="${env.siteUrl}/admin/pedidos" style="background:#364d66;color:#f7f6f2;padding:10px 18px;border-radius:999px;text-decoration:none">Ver en el panel</a></p>
+  <p style="margin:24px 0 0"><a href="${env.siteUrl}/admin/pedidos/${order.id}" style="background:#364d66;color:#f7f6f2;padding:10px 18px;border-radius:999px;text-decoration:none">Ver en el panel</a></p>
 </div>`;
 
-  try {
-    await new Resend(apiKey).emails.send({
-      from: process.env.ORDER_FROM_EMAIL || `${site.name} <onboarding@resend.dev>`,
-      to,
-      subject: `Pedido nuevo ${order.code} · ${formatPrice(order.total)}`,
-      html,
-    });
-  } catch (err) {
-    // El pedido ya quedó guardado; el email es solo aviso.
-    console.error("[email] fallo al notificar pedido", order.code, err);
+  const resend = new Resend(apiKey);
+  const from = process.env.ORDER_FROM_EMAIL || `${site.name} <onboarding@resend.dev>`;
+  const subject = `Pedido nuevo ${order.code} · ${formatPrice(order.total)}`;
+
+  // Un envío por destinatario: si uno es rechazado, los demás igual reciben el aviso.
+  // El pedido ya quedó guardado; el email es solo aviso.
+  const results = await Promise.allSettled(
+    recipients.map(async (to) => {
+      const { error } = await resend.emails.send({ from, to, subject, html });
+      if (error) throw new Error(`${to}: ${error.message}`);
+    }),
+  );
+  for (const r of results) {
+    if (r.status === "rejected") console.error("[email] fallo al notificar pedido", order.code, r.reason);
   }
 }
