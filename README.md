@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tienda online
 
-## Getting Started
+Catálogo + pedidos (sin pagos) para joyería, peluches, pines, llaveros, phone charms y legos.
+Next.js 16 · Supabase · Tailwind v4 · Vercel. Precios en Lempiras (HNL).
 
-First, run the development server:
+## Setup
+
+Proyecto Supabase: `tienda-online` (ref `tyafroedxuxjumpjbxnc`, us-east-1), ya enlazado con el CLI.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev                    # http://localhost:3000 (requiere .env.local)
+
+supabase db push               # aplicar migraciones nuevas de supabase/migrations
+supabase config push           # aplicar cambios de supabase/config.toml (auth, etc.)
+supabase db advisors --linked  # linter de seguridad/rendimiento
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Nuevo admin: crear usuario en Authentication → Users y luego:
+```sql
+insert into public.admins (user_id)
+select id from auth.users where email = 'nuevo@ejemplo.com';
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Seguridad
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Público (publishable key) solo puede: leer productos activos/categorías/imágenes y llamar `create_order()`.
+- `create_order()` recalcula precios en la BD y limita a 3 pedidos por teléfono cada 10 min.
+- Pedidos, escritura de catálogo y subida de imágenes: solo usuarios en `public.admins` (RLS).
+- `/admin` pasa por `src/proxy.ts` (chequeo optimista); la autorización real es RLS + `is_admin()`.
 
-## Learn More
+## Fases
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [x] 0 · Setup, esquema, RLS, tema
+- [ ] 1 · Catálogo público + filtros + detalle
+- [ ] 2 · Carrito, favoritos, pedido
+- [ ] 3 · Admin: login, CRUD productos/imágenes
+- [ ] 4 · Admin: pedidos, realtime, email
+- [ ] 5 · Más vendidos, SEO, QA, cron anti-pausa
