@@ -42,10 +42,18 @@ export function FilterSheet({
     if (!d) return;
     if (open && !d.open) {
       closing.current = false;
+      // La salida anterior queda "congelada" fuera de pantalla (fill: forwards): hay que soltarla
+      // o la hoja reabre invisible y solo se ve el fondo oscuro.
+      panel.current?.getAnimations().forEach((a) => a.cancel());
       if (panel.current) panel.current.style.transform = "";
       d.showModal();
     }
-    if (!open && d.open) d.close();
+    if (!open) {
+      closing.current = false;
+      if (d.open) d.close();
+      panel.current?.getAnimations().forEach((a) => a.cancel());
+      if (panel.current) panel.current.style.transform = "";
+    }
   }, [open]);
 
   function requestClose() {
@@ -54,10 +62,17 @@ export function FilterSheet({
     setLeaving(true);
 
     const el = panel.current;
+    let done = false;
     const finish = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(fallback);
       setLeaving(false);
       onClose();
     };
+    // Red de seguridad: si el navegador pausa o cancela la animación (pestaña en segundo plano,
+    // hilo ocupado), la hoja igual se cierra. Sin esto quedaba el fondo oscuro tapando todo.
+    const fallback = setTimeout(finish, 400);
     if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return finish();
 
     const from = getComputedStyle(el).transform;
@@ -67,6 +82,7 @@ export function FilterSheet({
       { duration: 240, easing: EASE_DRAWER, fill: "forwards" },
     );
     anim.onfinish = finish;
+    anim.oncancel = finish;
   }
 
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
@@ -100,6 +116,10 @@ export function FilterSheet({
       className="sheet"
       aria-label={title}
       {...(leaving ? { "data-closing": "" } : {})}
+      onClose={() => {
+        // Cierre nativo por cualquier vía: el estado del padre siempre queda alineado.
+        if (open) onClose();
+      }}
       onCancel={(e) => {
         e.preventDefault(); // Esc: cerrar con animación
         requestClose();

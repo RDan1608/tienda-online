@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Heart, House, LayoutGrid, ShoppingBag } from "lucide-react";
@@ -12,39 +13,43 @@ const items = [
   { href: "/carrito", label: "Pedido", icon: ShoppingBag, count: "cart" },
 ] as const;
 
-/** Barra inferior fija, solo en móvil. La opción activa lleva una píldora navy que se desliza. */
+const isActive = (href: string, pathname: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+
+/**
+ * Barra inferior fija, solo en móvil.
+ * El fondo navy vive en el propio ícono activo (no en una píldora aparte): fondo y color del ícono
+ * cambian juntos, así nunca queda un ícono claro sobre fondo claro. Al tocar, se marca al instante,
+ * sin esperar a que cargue la página.
+ */
 export function MobileNav() {
   const pathname = usePathname();
   const counts = useCounts();
-  const activeIndex = items.findIndex(({ href }) => (href === "/" ? pathname === "/" : pathname.startsWith(href)));
+  // Toque pendiente: solo vale mientras la ruta no haya cambiado desde el toque.
+  const [tapped, setTapped] = useState<{ from: string; href: string } | null>(null);
+  const current = tapped && tapped.from === pathname ? tapped.href : null;
+
+  // El pedido es un flujo aparte: sin barra inferior, el botón de continuar es lo único que compite.
+  if (pathname.startsWith("/carrito")) return null;
 
   return (
     <nav
       aria-label="Navegación principal"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-ivory/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-16px_rgb(54_77_102/0.35)] backdrop-blur-md md:hidden"
     >
-      <ul className="relative grid grid-cols-4">
-        {/* Píldora activa: una sola, se desliza (transform) hacia la pestaña elegida */}
-        <li
-          aria-hidden
-          className="pointer-events-none absolute left-0 top-2 w-1/4 transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)]"
-          style={{ transform: `translateX(${Math.max(activeIndex, 0) * 100}%)`, opacity: activeIndex < 0 ? 0 : 1 }}
-        >
-          <span key={activeIndex} className="pill-land mx-auto block h-8 w-16 rounded-full bg-navy" />
-        </li>
-
+      <ul className="grid grid-cols-4">
         {items.map(({ href, label, icon: Icon, count }) => {
-          const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+          const active = current ? current === href : isActive(href, pathname);
           return (
             <li key={href}>
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
+                onClick={() => setTapped({ from: pathname, href })}
                 className="group flex flex-col items-center gap-1 pb-2 pt-2 transition-transform duration-150 active:scale-95"
               >
                 <span
-                  className={`relative grid h-8 w-16 place-items-center transition-colors duration-200 ${
-                    active ? "text-ivory" : "text-muted"
+                  className={`relative grid h-8 w-16 place-items-center rounded-full transition-[background-color,color] duration-200 ${
+                    active ? "bg-navy text-ivory" : "text-muted"
                   }`}
                 >
                   <Icon className="size-[22px]" strokeWidth={active ? 2.25 : 1.6} />

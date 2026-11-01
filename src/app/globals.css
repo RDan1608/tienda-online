@@ -168,6 +168,11 @@ textarea {
   }
 }
 
+/* El pedido es un flujo sin barra inferior: solo queda el área segura del dispositivo. */
+html:has([data-cart-page]) {
+  --mobile-nav-h: env(safe-area-inset-bottom);
+}
+
 /* ───────── Hoja de filtros (móvil) ───────── */
 .sheet {
   position: fixed;

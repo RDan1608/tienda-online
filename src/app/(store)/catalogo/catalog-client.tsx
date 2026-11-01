@@ -33,6 +33,21 @@ export function CatalogClient({ items, categories }: { items: CatalogItem[]; cat
   const visible = results.slice(start, start + PAGE_SIZE);
   useFlip(grid, visible.map((p) => p.id).join());
 
+  // Al cambiar búsqueda, categoría, filtros u orden, se vuelve al buscador para ver el resultado desde el
+  // principio. Si hay una hoja abierta se espera a que cierre. Si ya estás arriba (escribiendo), no se mueve nada.
+  const filterKey = [filters.q, filters.cat.join(), filters.tag.join(), filters.min, filters.max, filters.sort].join("|");
+  const lastKey = useRef(filterKey);
+  useEffect(() => {
+    if (sheet !== null || lastKey.current === filterKey) return;
+    lastKey.current = filterKey;
+    const top = document.getElementById("catalogo-top");
+    if (!top || top.getBoundingClientRect().top >= 0) return;
+    top.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "start",
+    });
+  }, [filterKey, sheet]);
+
   // Al cambiar de página se vuelve al inicio de los resultados (no al inicio de la página).
   const goPage = (n: number) => {
     api.setPage(n);
@@ -160,15 +175,21 @@ function SearchBox({ api }: { api: CatalogApi }) {
   const ref = useRef<HTMLInputElement>(null);
   const { search, update } = api;
 
+  // Llegar con #buscar (botón de la lupa): se enfoca el campo y se centra a la vista.
+  useEffect(() => {
+    if (window.location.hash !== "#buscar") return;
+    ref.current?.focus();
+    document.getElementById("catalogo-top")?.scrollIntoView({ block: "start" });
+  }, []);
+
   return (
-    <label className="relative block">
+    <label id="catalogo-top" className="relative block scroll-mt-20">
       <span className="sr-only">Buscar productos</span>
       <Search className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-muted" />
       <input
         ref={ref}
         id="buscar"
         type="search"
-        autoFocus={typeof window !== "undefined" && window.location.hash === "#buscar"}
         value={search}
         onChange={(e) => update({ q: e.target.value || null })}
         onKeyDown={(e) => e.key === "Escape" && search && update({ q: null })}

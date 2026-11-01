@@ -47,7 +47,7 @@ export function CartView() {
   // Con la barra fija visible, el aviso flotante se aparta de ella.
   useEffect(() => {
     const root = document.documentElement;
-    if (hasItems) root.style.setProperty("--sticky-bar-h", "4.5rem");
+    if (hasItems) root.style.setProperty("--sticky-bar-h", "5.5rem");
     return () => {
       root.style.removeProperty("--sticky-bar-h");
     };
@@ -75,11 +75,11 @@ export function CartView() {
       <LoaderCircle className="size-[18px] animate-spin" /> Enviando…
     </>
   ) : (
-    <>Enviar pedido</>
+    <>Confirmar pedido</>
   );
 
   return (
-    <div className="mt-5 grid gap-6 pb-28 lg:grid-cols-[1fr_400px] lg:gap-14 lg:pb-0">
+    <div data-cart-page className="mt-5 grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-14">
       <Steps step={step} onStep={goStep} />
 
       {/* Paso 1 · revisar el pedido */}
@@ -95,13 +95,23 @@ export function CartView() {
             <CartRow key={item.id} item={item} />
           ))}
         </ul>
-        <div className="mt-5 flex items-baseline justify-between px-1">
-          <span className="text-[15px] text-muted">Total estimado</span>
-          <span className="text-2xl font-extrabold tabular-nums tracking-[-0.02em]">{formatPrice(total)}</span>
-        </div>
+        <dl className="mt-5 space-y-2.5 rounded-[24px] bg-powder/50 p-5 text-[15px]">
+          <div className="flex justify-between">
+            <dt className="text-muted">{unitsLabel}</dt>
+            <dd className="tabular-nums">{formatPrice(total)}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-muted">Envío</dt>
+            <dd>Se coordina contigo</dd>
+          </div>
+          <div className="flex items-baseline justify-between border-t border-dusty/60 pt-3">
+            <dt className="font-semibold">Total estimado</dt>
+            <dd className="text-2xl font-extrabold tabular-nums tracking-[-0.02em]">{formatPrice(total)}</dd>
+          </div>
+        </dl>
         <Link
           href="/catalogo"
-          className="mt-5 inline-flex h-11 items-center gap-1.5 rounded-full px-1 text-sm font-semibold text-muted transition-colors hover:text-navy"
+          className="mt-3 inline-flex h-11 items-center gap-1.5 rounded-full px-1 text-sm font-semibold text-muted transition-colors hover:text-navy"
         >
           <ChevronLeft className="size-4" /> Seguir viendo productos
         </Link>
@@ -175,35 +185,36 @@ export function CartView() {
         </form>
       </section>
 
-      {/* Móvil: total y acción del paso siempre a la vista, sobre la navegación */}
-      <div className="fixed inset-x-0 bottom-[var(--mobile-nav-h)] z-30 border-t border-border bg-ivory/95 px-4 py-2.5 backdrop-blur-md lg:hidden">
-        <div className="mx-auto flex max-w-md items-center gap-4">
-          <div>
-            <p className="text-xs text-muted">{unitsLabel}</p>
-            <p className="text-lg font-extrabold tabular-nums leading-tight">{formatPrice(total)}</p>
-          </div>
-          {step === 1 ? (
-            // key distinta: si React reutilizara este botón como "submit", el MISMO toque enviaría el formulario.
-            <button
-              key="siguiente"
-              type="button"
-              onClick={() => goStep(2)}
-              className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-navy text-[15px] font-semibold text-ivory transition active:scale-[0.98]"
-            >
+      {/* Móvil: un solo botón grande, pegado al borde inferior (sin segunda barra). El precio va dentro de la acción. */}
+      <div className="sticky bottom-0 z-30 -mx-4 bg-gradient-to-t from-ivory from-70% to-ivory/0 px-4 pb-[max(0.875rem,env(safe-area-inset-bottom))] pt-5 sm:-mx-6 sm:px-6 lg:hidden">
+        {step === 1 ? (
+          // key distinta: si React reutilizara este botón como "submit", el MISMO toque enviaría el formulario.
+          <button
+            key="siguiente"
+            type="button"
+            onClick={() => goStep(2)}
+            className="flex h-14 w-full items-center justify-between rounded-full bg-navy pl-7 pr-3 text-base font-semibold text-ivory shadow-float transition active:scale-[0.98]"
+          >
+            <span className="inline-flex items-center gap-2">
               Continuar <ArrowRight className="size-[18px]" />
-            </button>
-          ) : (
+            </span>
+            <span className="rounded-full bg-ivory/15 px-3.5 py-2 text-[15px] font-bold tabular-nums">{formatPrice(total)}</span>
+          </button>
+        ) : (
+          <>
             <button
               key="enviar"
               type="submit"
               form="pedido"
               disabled={pending}
-              className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-navy text-[15px] font-semibold text-ivory transition active:scale-[0.98] disabled:opacity-70"
+              className="flex h-14 w-full items-center justify-between rounded-full bg-navy pl-7 pr-3 text-base font-semibold text-ivory shadow-float transition active:scale-[0.98] disabled:opacity-70"
             >
-              {sending}
+              <span className="inline-flex items-center gap-2">{sending}</span>
+              <span className="rounded-full bg-ivory/15 px-3.5 py-2 text-[15px] font-bold tabular-nums">{formatPrice(total)}</span>
             </button>
-          )}
-        </div>
+            <p className="mt-2 text-center text-xs text-muted">No se cobra nada ahora</p>
+          </>
+        )}
       </div>
     </div>
   );

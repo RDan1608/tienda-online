@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Heart, Search, ShoppingBag } from "lucide-react";
 import { cartCount, useCart, useFavorites, useHydrated } from "@/lib/stores";
 
@@ -33,12 +34,24 @@ export function useCounts() {
 
 export function HeaderActions() {
   const { cart, favs } = useCounts();
+  const pathname = usePathname();
+  // Ya en el catálogo, la lupa no navega: lleva directo al buscador y lo enfoca.
+  const goSearch = (e: React.MouseEvent) => {
+    if (pathname !== "/catalogo") return;
+    e.preventDefault();
+    const box = document.getElementById("buscar") as HTMLInputElement | null;
+    document.getElementById("catalogo-top")?.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "start",
+    });
+    box?.focus({ preventScroll: true });
+  };
   const btn =
     "relative grid size-10 place-items-center rounded-full text-navy transition hover:bg-powder/70";
 
   return (
     <div className="flex items-center gap-1">
-      <Link href="/catalogo#buscar" className={btn} aria-label="Buscar">
+      <Link href="/catalogo#buscar" onClick={goSearch} className={btn} aria-label="Buscar">
         <Search className="size-5" strokeWidth={1.75} />
       </Link>
       <Link href="/favoritos" className={`${btn} max-md:hidden`}>

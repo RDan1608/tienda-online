@@ -26,7 +26,7 @@ export function CartToast() {
   if (!event) return null;
   const removed = event.kind === "removed";
   // En el detalle del producto el contador "1 en tu pedido" ya confirma; solo se avisa para "Deshacer".
-  if (!removed && pathname.startsWith("/producto/")) return null;
+  if (!removed && (pathname.startsWith("/producto/") || pathname.startsWith("/carrito"))) return null;
 
   return (
     <div

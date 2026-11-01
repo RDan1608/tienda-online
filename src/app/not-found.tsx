@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <main className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center px-4 py-24 text-center">
+    <div className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center px-4 py-24 text-center">
       <p className="text-xs uppercase tracking-[0.22em] text-muted">Error 404</p>
       <h1 className="mt-3 font-display text-4xl font-semibold tracking-[-0.025em]">No encontramos esta página</h1>
       <p className="mt-3 text-muted">Puede que el producto ya no esté disponible.</p>
@@ -12,6 +12,6 @@ export default function NotFound() {
       >
         Ver catálogo
       </Link>
-    </main>
+    </div>
   );
 }
