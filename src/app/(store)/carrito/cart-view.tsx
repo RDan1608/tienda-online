@@ -10,6 +10,7 @@ import { useFreshProducts } from "@/lib/use-fresh-products";
 import { SummaryRow } from "@/components/summary-row";
 import { EmptyState } from "@/components/empty-state";
 import { useSubmit } from "@/lib/use-submit";
+import { rememberOrder } from "../pedido/track-view";
 import { createOrder, type OrderState } from "./actions";
 
 /**
@@ -41,7 +42,10 @@ export function CartView() {
 
   // Pedido creado → vaciar carrito.
   useEffect(() => {
-    if (state.status === "success") clear();
+    if (state.status === "success") {
+      rememberOrder(state.code, state.phone); // para seguir el pedido sin volver a escribir nada
+      clear();
+    }
   }, [state, clear]);
 
   // Con la barra fija visible, el aviso flotante se aparta de ella.
@@ -410,10 +414,14 @@ function Confirmation({ code, total }: { code: string; total: number }) {
           </a>
         )}
         <Link
+          href={`/pedido?codigo=${code}`}
+          className="inline-flex h-14 items-center justify-center rounded-full bg-navy text-[15px] font-semibold text-ivory transition active:scale-[0.98]"
+        >
+          Seguir mi pedido
+        </Link>
+        <Link
           href="/catalogo"
-          className={`inline-flex h-14 items-center justify-center rounded-full text-[15px] font-semibold transition active:scale-[0.98] ${
-            wa ? "bg-powder" : "bg-navy text-ivory"
-          }`}
+          className="inline-flex h-14 items-center justify-center rounded-full bg-powder text-[15px] font-semibold transition active:scale-[0.98]"
         >
           Seguir viendo
         </Link>

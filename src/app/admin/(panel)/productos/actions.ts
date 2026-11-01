@@ -112,6 +112,11 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
   const orphaned = (prev ?? []).map((p) => p.path).filter((p) => !keep.has(p));
   if (orphaned.length) await supabase.storage.from(BUCKET).remove(orphaned);
 
+  // Etiquetas nuevas escritas en el formulario pasan a la lista administrable.
+  if (fields.tags.length) {
+    await supabase.from("tags").upsert(fields.tags.map((name) => ({ name })), { onConflict: "name", ignoreDuplicates: true });
+  }
+
   updateTag(CATALOG_TAG);
 
   if (!existing) redirect(`/admin/productos/${d.id}?creado=1`);

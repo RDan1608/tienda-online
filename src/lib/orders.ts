@@ -1,12 +1,22 @@
+/**
+ * Etapas del pedido. El negocio compra por lote: se reúnen pedidos, se hace el pedido al proveedor,
+ * llega, y se coordina la entrega. `preparando` se muestra como "Pedido realizado" (al proveedor).
+ * `hint` es lo que lee el CLIENTE en su seguimiento.
+ */
 export const orderStatuses = [
-  { value: "nuevo", label: "Nuevo", plural: "Nuevos" },
-  { value: "confirmado", label: "Confirmado", plural: "Confirmados" },
-  { value: "preparando", label: "Preparando", plural: "Preparando" },
-  { value: "entregado", label: "Entregado", plural: "Entregados" },
-  { value: "cancelado", label: "Cancelado", plural: "Cancelados" },
+  { value: "nuevo", label: "Recibido", plural: "Nuevos", hint: "Recibimos tu pedido. Te escribiremos para confirmarlo." },
+  { value: "confirmado", label: "Confirmado", plural: "Confirmados", hint: "Tu pedido está confirmado y en lista para el siguiente pedido." },
+  { value: "preparando", label: "Pedido realizado", plural: "Pedido realizado", hint: "Ya hicimos el pedido al proveedor." },
+  { value: "en_camino", label: "En camino", plural: "En camino", hint: "Tu pedido viene en camino hacia nosotros." },
+  { value: "listo", label: "Listo para entrega", plural: "Listos", hint: "Ya llegó. Coordinamos la entrega contigo." },
+  { value: "entregado", label: "Entregado", plural: "Entregados", hint: "Entregado. ¡Gracias por tu compra!" },
+  { value: "cancelado", label: "Cancelado", plural: "Cancelados", hint: "Este pedido fue cancelado." },
 ] as const;
 
 export type OrderStatus = (typeof orderStatuses)[number]["value"];
+
+/** Etapas del camino normal (sin cancelado), en orden. */
+export const orderSteps = orderStatuses.filter((s) => s.value !== "cancelado");
 
 export const statusLabel = (s: string) => orderStatuses.find((o) => o.value === s)?.label ?? s;
 
@@ -19,6 +29,8 @@ export const statusStyle: Record<OrderStatus, string> = {
   nuevo: "bg-navy text-ivory",
   confirmado: "bg-steel text-white",
   preparando: "bg-dusty text-navy",
+  en_camino: "bg-butter text-honey-ink",
+  listo: "bg-blush text-rose-ink",
   entregado: "bg-powder text-navy",
   cancelado: "bg-transparent text-muted ring-1 ring-border line-through",
 };
@@ -36,8 +48,12 @@ export function nextStatus(s: OrderStatus): { value: OrderStatus; action: string
     case "nuevo":
       return { value: "confirmado", action: "Confirmar" };
     case "confirmado":
-      return { value: "preparando", action: "Preparar" };
+      return { value: "preparando", action: "Pedido hecho al proveedor" };
     case "preparando":
+      return { value: "en_camino", action: "Marcar en camino" };
+    case "en_camino":
+      return { value: "listo", action: "Llegó: listo para entrega" };
+    case "listo":
       return { value: "entregado", action: "Marcar entregado" };
     default:
       return null;

@@ -3,6 +3,7 @@ import { CheckCircle2, ChevronRight, ImageOff, Plus, TrendingUp } from "lucide-r
 import { requireAdmin } from "@/lib/admin";
 import { formatPrice } from "@/lib/format";
 import type { OrderStatus } from "@/lib/orders";
+import { coversFor } from "./pedidos/covers";
 import { OrderRow } from "./pedidos/order-row";
 import { WeekChart, type Day } from "./week-chart";
 
@@ -17,7 +18,7 @@ export default async function AdminHome() {
     supabase.from("products").select("id, is_active, images:product_images(path)"),
     supabase
       .from("orders")
-      .select("id, code, customer_name, phone, total, status, created_at")
+      .select("id, code, customer_name, phone, total, status, created_at, items:order_items(qty, product_id, name_snapshot)")
       .order("created_at", { ascending: false }),
   ]);
 
@@ -29,14 +30,21 @@ export default async function AdminHome() {
     total: number;
     status: OrderStatus;
     created_at: string;
+    items: { qty: number; product_id: string | null; name_snapshot: string }[];
   }[];
   const now = currentTime();
+  const covers = await coversFor(supabase, all.slice(0, 12).flatMap((o) => o.items.map((i) => i.product_id)));
+  const decorate = (o: (typeof all)[number]) => ({
+    ...o,
+    units: o.items.reduce((n, i) => n + i.qty, 0),
+    thumbs: o.items.map((i) => ({ path: (i.product_id && covers.get(i.product_id)) || null, name: i.name_snapshot })),
+  });
   const fresh = all.filter((o) => o.status === "nuevo");
   const today = all.filter((o) => dayKey(o.created_at) === dayKey(now));
   // Venta = pedidos que ya se confirmaron (no los nuevos sin atender ni los cancelados).
-  const sold = all.filter((o) => ["confirmado", "preparando", "entregado"].includes(o.status));
+  const sold = all.filter((o) => ["confirmado", "preparando", "en_camino", "listo", "entregado"].includes(o.status));
   const monthSales = sold.filter((o) => monthKey(o.created_at) === monthKey(now)).reduce((n, o) => n + Number(o.total), 0);
-  const inProgress = all.filter((o) => o.status === "confirmado" || o.status === "preparando").length;
+  const inProgress = all.filter((o) => ["confirmado", "preparando", "en_camino", "listo"].includes(o.status)).length;
 
   // Ventas por día, últimos 7 días (hora de Honduras). Cuentan los pedidos que no están cancelados.
   const weekday = new Intl.DateTimeFormat("es-HN", { timeZone: TZ, weekday: "short" });
@@ -117,7 +125,7 @@ export default async function AdminHome() {
         ) : (
           <ul className="space-y-3">
             {fresh.slice(0, 3).map((o) => (
-              <OrderRow key={o.id} o={o} />
+              <OrderRow key={o.id} o={decorate(o)} />
             ))}
           </ul>
         )}
@@ -168,7 +176,7 @@ export default async function AdminHome() {
           </div>
           <ul className="space-y-3">
             {all.filter((o) => o.status !== "nuevo").slice(0, 4).map((o) => (
-              <OrderRow key={o.id} o={o} />
+              <OrderRow key={o.id} o={decorate(o)} />
             ))}
           </ul>
         </section>

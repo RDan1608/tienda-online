@@ -3,11 +3,12 @@ import Link from "next/link";
 import { Inbox, Search, X } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
 import { dayLabel, isOrderStatus, orderStatuses, type OrderStatus } from "@/lib/orders";
+import { coversFor } from "./covers";
 import { OrderRow, type OrderRowData } from "./order-row";
 
 export const metadata: Metadata = { title: "Pedidos" };
 
-type Row = OrderRowData & { items: { qty: number }[] };
+type Row = OrderRowData & { items: { qty: number; product_id: string | null; name_snapshot: string }[] };
 
 export default async function OrdersPage({ searchParams }: PageProps<"/admin/pedidos">) {
   const { supabase } = await requireAdmin();
@@ -18,16 +19,19 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/ped
 
   let query = supabase
     .from("orders")
-    .select("id, code, customer_name, phone, total, status, created_at, items:order_items(qty)")
+    .select("id, code, customer_name, phone, total, status, created_at, items:order_items(qty, product_id, name_snapshot)")
     .order("created_at", { ascending: false })
     .limit(100);
   if (filter) query = query.eq("status", filter);
   if (q) query = query.or(`code.ilike.%${q}%,customer_name.ilike.%${q}%,phone.ilike.%${q}%`);
 
   const [{ data }, { data: all }] = await Promise.all([query, supabase.from("orders").select("status")]);
-  const orders = ((data ?? []) as unknown as (Row & { items: { qty: number }[] })[]).map((o) => ({
+  const rows = (data ?? []) as unknown as Row[];
+  const covers = await coversFor(supabase, rows.flatMap((o) => o.items.map((i) => i.product_id)));
+  const orders = rows.map((o) => ({
     ...o,
     units: o.items.reduce((n, i) => n + i.qty, 0),
+    thumbs: o.items.map((i) => ({ path: (i.product_id && covers.get(i.product_id)) || null, name: i.name_snapshot })),
   }));
 
   const counts = new Map<string, number>();

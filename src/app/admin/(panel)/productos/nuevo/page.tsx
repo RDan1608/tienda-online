@@ -10,7 +10,10 @@ export const metadata: Metadata = { title: "Nuevo producto" };
 export default async function NewProductPage() {
   const { supabase } = await requireAdmin();
   const newId = crypto.randomUUID();
-  const { data } = await supabase.from("categories").select("id, name, slug, sort_order").order("sort_order");
+  const [{ data }, { data: tags }] = await Promise.all([
+    supabase.from("categories").select("id, name, slug, sort_order").order("sort_order"),
+    supabase.from("tags").select("name").order("name"),
+  ]);
 
   return (
     <>
@@ -19,7 +22,10 @@ export default async function NewProductPage() {
       </Link>
       <h1 className="mb-8 font-display text-4xl font-semibold tracking-[-0.025em]">Nuevo producto</h1>
       {/* id nuevo por visita: Next conserva ocultas las páginas anteriores y su estado */}
-      <ProductForm key={newId} newId={newId} product={null} categories={(data ?? []) as Category[]} />
+      <ProductForm key={newId} newId={newId} product={null}
+        categories={(data ?? []) as Category[]}
+        tagOptions={(tags ?? []).map((t) => t.name)}
+      />
     </>
   );
 }

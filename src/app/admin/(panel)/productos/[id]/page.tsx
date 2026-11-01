@@ -14,13 +14,14 @@ export default async function EditProductPage({ params, searchParams }: PageProp
   if (!z.uuid().safeParse(id).success) notFound();
 
   const { supabase } = await requireAdmin();
-  const [{ data: p }, { data: categories }] = await Promise.all([
+  const [{ data: p }, { data: categories }, { data: tags }] = await Promise.all([
     supabase
       .from("products")
       .select("id, name, slug, description, price, category_id, tags, is_active, is_featured, images:product_images(path, alt, sort_order)")
       .eq("id", id)
       .maybeSingle(),
     supabase.from("categories").select("id, name, slug, sort_order").order("sort_order"),
+    supabase.from("tags").select("name").order("name"),
   ]);
   if (!p) notFound();
 
@@ -59,6 +60,7 @@ export default async function EditProductPage({ params, searchParams }: PageProp
         key={p.id}
         product={product}
         categories={(categories ?? []) as Category[]}
+        tagOptions={(tags ?? []).map((t) => t.name)}
         justCreated={(await searchParams).creado === "1"}
       />
     </>

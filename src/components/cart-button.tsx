@@ -15,7 +15,12 @@ const MAX_QTY = 99;
  * ya no suma a ciegas, y "−" en 1 quita el producto (con "Deshacer" en el aviso).
  */
 export function CartButton({ product, variant = "lg" }: { product: ProductSummary; variant?: Variant }) {
-  const { qty, inc, dec } = useCartLine(product);
+  const line = useCartLine(product);
+  const { qty, dec } = line;
+  const inc = () => {
+    navigator.vibrate?.(8); // vibración leve: confirma el toque sin mirar
+    line.inc();
+  };
   const MinusIcon = qty === 1 ? Trash2 : Minus;
   const minusLabel = qty === 1 ? `Quitar ${product.name} del pedido` : `Quitar uno de ${product.name}`;
   const plusLabel = `Agregar uno más de ${product.name}`;

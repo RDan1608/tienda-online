@@ -8,9 +8,12 @@ import type { ProductSummary } from "@/lib/types";
 export function FavoriteButton({
   product,
   variant = "floating",
+  onRemove,
 }: {
   product: ProductSummary;
   variant?: "floating" | "inline";
+  /** Si se pasa, al quitar el favorito se llama esto (para animar la salida) en vez de quitarlo de golpe. */
+  onRemove?: () => void;
 }) {
   const hydrated = useHydrated();
   const [popping, setPopping] = useState(false);
@@ -24,6 +27,8 @@ export function FavoriteButton({
       type="button"
       onClick={(e) => {
         e.preventDefault();
+        navigator.vibrate?.(8); // vibración leve en el teléfono: confirma el toque sin mirar
+        if (active && onRemove) return onRemove();
         if (!active) setPopping(true); // el pulso y los destellos solo al agregar, no al quitar
         toggle(product);
       }}

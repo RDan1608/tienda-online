@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, BellOff, ClipboardList, ExternalLink, LayoutDashboard, LogOut, Package, Tags, X } from "lucide-react";
@@ -26,6 +27,9 @@ export function AdminNav({
   signOutAction: () => Promise<void>;
 }) {
   const pathname = usePathname();
+  // Toque pendiente: la pestaña se marca al instante, sin esperar a que cargue la página.
+  const [tapped, setTapped] = useState<{ from: string; href: string } | null>(null);
+  const pending = tapped && tapped.from === pathname ? tapped.href : null;
   const { toast, dismiss, soundOn, toggleSound } = useOrderAlerts();
   // En el detalle de un pedido o al editar un producto manda la barra de acciones de esa pantalla.
   const focusMode = /^\/admin\/(productos|pedidos)\/[^/]+/.test(pathname);
@@ -102,13 +106,14 @@ export function AdminNav({
         >
           <ul className="grid grid-cols-4">
             {links.map((l) => {
-              const active = isActive(l, pathname);
+              const active = pending ? pending === l.href : isActive(l, pathname);
               const Icon = l.icon;
               return (
                 <li key={l.href}>
                   <Link
                     href={l.href}
                     aria-current={active ? "page" : undefined}
+                    onClick={() => setTapped({ from: pathname, href: l.href })}
                     className="flex flex-col items-center gap-1 pb-2 pt-2 transition-transform duration-150 active:scale-95"
                   >
                     <span

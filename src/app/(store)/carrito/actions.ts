@@ -29,7 +29,7 @@ const schema = z.object({
 export type OrderState =
   | { status: "idle" }
   | { status: "error"; message: string; fields?: Partial<Record<string, string>> }
-  | { status: "success"; code: string; total: number };
+  | { status: "success"; code: string; total: number; phone: string };
 
 export async function createOrder(_prev: OrderState, formData: FormData): Promise<OrderState> {
   // Captcha invisible. Si el servicio de verificación falla, se deja pasar (no perder pedidos reales);
@@ -94,5 +94,5 @@ export async function createOrder(_prev: OrderState, formData: FormData): Promis
     }),
   );
 
-  return { status: "success", code: order.order_code, total: Number(order.order_total) };
+  return { status: "success", code: order.order_code, total: Number(order.order_total), phone };
 }

@@ -13,6 +13,7 @@ export function SiteFooter() {
           <Link href="/catalogo" className="transition-colors hover:text-navy">Catálogo</Link>
           <Link href="/favoritos" className="transition-colors hover:text-navy">Favoritos</Link>
           <Link href="/carrito" className="transition-colors hover:text-navy">Mi pedido</Link>
+          <Link href="/pedido" className="transition-colors hover:text-navy">Seguir mi pedido</Link>
         </nav>
       </div>
     </footer>

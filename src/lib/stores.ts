@@ -23,6 +23,8 @@ type CartState = {
   remove: (id: string) => void;
   /** Deshace la última eliminación. */
   restore: () => void;
+  /** Deshace el último "agregado" (quita el producto sin dejar aviso de eliminación). */
+  undoAdd: () => void;
   dismissEvent: () => void;
   clear: () => void;
   sync: (fresh: ProductSummary[]) => void;
@@ -87,6 +89,12 @@ export const useCart = create<CartState>()(
           if (!ev || ev.kind !== "removed" || s.items.some((i) => i.id === ev.item.id)) return { lastEvent: null };
           return { items: [...s.items, ev.item], lastEvent: null };
         }),
+      undoAdd: () =>
+        set((s) => {
+          const ev = s.lastEvent;
+          if (!ev || ev.kind !== "added") return { lastEvent: null };
+          return { items: s.items.filter((i) => i.id !== ev.item.id), lastEvent: null };
+        }),
       dismissEvent: () => set({ lastEvent: null }),
       clear: () => set({ items: [], lastEvent: null }),
       sync: (fresh) => set((s) => ({ items: syncItems(s.items, fresh) })),
@@ -96,10 +104,17 @@ export const useCart = create<CartState>()(
   ),
 );
 
+/** Último cambio en favoritos: alimenta el aviso con "Deshacer". */
+export type FavEvent = { kind: "added" | "removed"; item: ProductSummary; at: number };
+
 type FavoritesState = {
   items: ProductSummary[];
+  lastEvent: FavEvent | null;
   toggle: (product: ProductSummary) => void;
   remove: (id: string) => void;
+  /** Deshace lo último: vuelve a poner lo quitado o quita lo recién guardado. */
+  undo: () => void;
+  dismissEvent: () => void;
   sync: (fresh: ProductSummary[]) => void;
 };
 
@@ -107,16 +122,38 @@ export const useFavorites = create<FavoritesState>()(
   persist(
     (set) => ({
       items: [],
+      lastEvent: null,
       toggle: (product) =>
         set((s) =>
           s.items.some((i) => i.id === product.id)
-            ? { items: s.items.filter((i) => i.id !== product.id) }
-            : { items: [product, ...s.items] },
+            ? {
+                items: s.items.filter((i) => i.id !== product.id),
+                lastEvent: { kind: "removed", item: product, at: Date.now() },
+              }
+            : { items: [product, ...s.items], lastEvent: { kind: "added", item: product, at: Date.now() } },
         ),
-      remove: (id) => set((s) => ({ items: s.items.filter((i) => i.id !== id) })),
+      remove: (id) =>
+        set((s) => {
+          const item = s.items.find((i) => i.id === id);
+          return {
+            items: s.items.filter((i) => i.id !== id),
+            lastEvent: item ? { kind: "removed", item, at: Date.now() } : s.lastEvent,
+          };
+        }),
+      undo: () =>
+        set((s) => {
+          const ev = s.lastEvent;
+          if (!ev) return s;
+          if (ev.kind === "added") return { items: s.items.filter((i) => i.id !== ev.item.id), lastEvent: null };
+          return s.items.some((i) => i.id === ev.item.id)
+            ? { lastEvent: null }
+            : { items: [ev.item, ...s.items], lastEvent: null };
+        }),
+      dismissEvent: () => set({ lastEvent: null }),
       sync: (fresh) => set((s) => ({ items: syncItems(s.items, fresh) })),
     }),
-    { name: "tienda-favorites", version: 1 },
+    // El aviso es efímero: solo la lista se guarda en el dispositivo.
+    { name: "tienda-favorites", version: 1, partialize: (s) => ({ items: s.items }) },
   ),
 );
 

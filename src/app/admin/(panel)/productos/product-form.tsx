@@ -8,6 +8,7 @@ import { storageUrl } from "@/lib/env";
 import { toWebp } from "@/lib/image-compress";
 import type { Category } from "@/lib/types";
 import { useSubmit } from "@/lib/use-submit";
+import { TagPicker } from "./tag-picker";
 import { deleteProduct, saveProduct, type ProductState } from "./actions";
 
 export type FormProduct = {
@@ -30,11 +31,14 @@ export function ProductForm({
   product,
   newId,
   categories,
+  tagOptions,
   justCreated,
 }: {
   product: FormProduct | null;
   newId?: string;
   categories: Category[];
+  /** Etiquetas definidas por el admin (Categorías → Etiquetas). */
+  tagOptions: string[];
   justCreated?: boolean;
 }) {
   // Un producto nuevo recibe su id desde ya: las fotos se suben a su carpeta antes de guardar.
@@ -189,9 +193,8 @@ export function ProductForm({
             <textarea name="description" rows={4} defaultValue={product?.description} maxLength={2000} className={`${field} resize-y py-3`} />
           </Labeled>
 
-          <Labeled label="Etiquetas" hint="Separadas por coma. Aparecen como filtros de estilo: kawaii, dorado, regalo" error={err("tags")}>
-            <input name="tags" defaultValue={product?.tags.join(", ")} className={`${field} h-12`} />
-          </Labeled>
+          <TagPicker options={tagOptions} selected={product?.tags ?? []} />
+          {err("tags") && <p className="text-sm text-rose-ink">{err("tags")}</p>}
 
           <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:gap-8">
             <Check2 name="is_active" label="Visible en la tienda" defaultChecked={product?.is_active ?? true} />

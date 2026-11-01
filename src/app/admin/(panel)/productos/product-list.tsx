@@ -7,6 +7,7 @@ import { Eye, EyeOff, Search, Star, X } from "lucide-react";
 import { storageUrl } from "@/lib/env";
 import { formatPrice } from "@/lib/format";
 import { CategoryIcon } from "@/components/category-icon";
+import { Pagination } from "@/components/pagination";
 import { toggleActive, toggleFeatured } from "./actions";
 
 export type ProductRow = {
@@ -29,6 +30,7 @@ const views: { value: View; label: string }[] = [
   { value: "sinfoto", label: "Sin foto" },
 ];
 
+const PAGE = 10;
 const norm = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
 export function ProductList({
@@ -43,6 +45,12 @@ export function ProductList({
   const [q, setQ] = useState("");
   const [view, setView] = useState<View>(initialView);
   const [cat, setCat] = useState("");
+  const [page, setPage] = useState(1);
+  // Cualquier cambio de búsqueda o filtro vuelve a la primera página.
+  const reset = <T,>(set: (v: T) => void) => (v: T) => {
+    set(v);
+    setPage(1);
+  };
 
   const counts = useMemo(
     () => ({
@@ -65,6 +73,9 @@ export function ProductList({
     });
   }, [products, q, view, cat]);
 
+  const pages = Math.max(1, Math.ceil(shown.length / PAGE));
+  const current = Math.min(page, pages);
+  const pageItems = shown.slice((current - 1) * PAGE, current * PAGE);
   const filtered = q.trim() !== "" || view !== "todos" || cat !== "";
 
   return (
@@ -75,14 +86,14 @@ export function ProductList({
         <input
           type="search"
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={(e) => reset(setQ)(e.target.value)}
           placeholder="Buscar por nombre…"
           className="h-12 w-full rounded-full border border-transparent bg-powder/70 pl-11 pr-11 text-[15px] outline-none transition placeholder:text-muted/80 focus:border-steel focus:bg-surface focus:ring-4 focus:ring-powder"
         />
         {q && (
           <button
             type="button"
-            onClick={() => setQ("")}
+            onClick={() => reset(setQ)("")}
             aria-label="Borrar búsqueda"
             className="absolute right-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full text-muted transition hover:bg-powder hover:text-navy active:scale-90"
           >
@@ -101,7 +112,7 @@ export function ProductList({
                 type="button"
                 role="tab"
                 aria-selected={active}
-                onClick={() => setView(v.value)}
+                onClick={() => reset(setView)(v.value)}
                 className={`relative inline-flex h-12 shrink-0 items-center gap-1.5 text-[15px] transition-colors ${
                   active ? "font-bold text-navy" : "font-medium text-muted hover:text-navy"
                 }`}
@@ -128,7 +139,7 @@ export function ProductList({
           <span className="sr-only">Categoría</span>
           <select
             value={cat}
-            onChange={(e) => setCat(e.target.value)}
+            onChange={(e) => reset(setCat)(e.target.value)}
             className="h-10 rounded-full border border-border bg-surface px-4 pr-8 text-sm font-medium outline-none transition-colors hover:border-steel focus:border-steel"
           >
             <option value="">Todas las categorías</option>
@@ -151,6 +162,7 @@ export function ProductList({
                 setQ("");
                 setView("todos");
                 setCat("");
+                setPage(1);
               }}
               className="mt-4 h-11 rounded-full bg-navy px-5 text-sm font-semibold text-ivory"
             >
@@ -160,7 +172,7 @@ export function ProductList({
         </div>
       ) : (
         <ul className="mt-4 space-y-3">
-          {shown.map((p) => (
+          {pageItems.map((p) => (
             <li key={p.id} className="flex items-center gap-1 rounded-3xl bg-surface p-3 ring-1 ring-border">
               <Link href={`/admin/productos/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3">
                 <div className="relative size-16 shrink-0 overflow-hidden rounded-2xl bg-powder">
@@ -215,6 +227,18 @@ export function ProductList({
           ))}
         </ul>
       )}
+
+      <Pagination
+        page={current}
+        totalPages={pages}
+        from={(current - 1) * PAGE + 1}
+        to={(current - 1) * PAGE + pageItems.length}
+        total={shown.length}
+        onPage={(n) => {
+          setPage(n);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+      />
     </>
   );
 }

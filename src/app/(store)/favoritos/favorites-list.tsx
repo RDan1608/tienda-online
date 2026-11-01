@@ -1,7 +1,9 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
+import { useFlip } from "@/lib/use-flip";
 import { formatPrice } from "@/lib/format";
 import { useCart, useFavorites, useHydrated } from "@/lib/stores";
 import type { ProductSummary } from "@/lib/types";
@@ -17,6 +19,18 @@ export function FavoritesList() {
   const sync = useFavorites((s) => s.sync);
   const cart = useCart((s) => s.items);
   const add = useCart((s) => s.add);
+  const toggle = useFavorites((s) => s.toggle);
+  const grid = useRef<HTMLUListElement>(null);
+  // Tarjetas que se están yendo: se encogen y se desvanecen, y recién entonces salen (con "Deshacer").
+  const [leaving, setLeaving] = useState<string[]>([]);
+  useFlip(grid, items.map((p) => p.id).join());
+  const leave = (p: ProductSummary) => {
+    setLeaving((l) => [...l, p.id]);
+    setTimeout(() => {
+      toggle(p);
+      setLeaving((l) => l.filter((id) => id !== p.id));
+    }, 260);
+  };
   const removed = useFreshProducts(
     items.map((i) => i.id),
     hydrated,
@@ -65,10 +79,15 @@ export function FavoritesList() {
       </div>
 
       <h2 className="sr-only">Tus favoritos</h2>
-      <ul className="mt-5 grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-4">
+      <ul ref={grid} className="relative mt-5 grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-4">
         {items.map((p, i) => (
-          <li key={p.id} className="card-in" style={{ "--i": i } as React.CSSProperties}>
-            <FavoriteCard product={p} />
+          <li
+            key={p.id}
+            data-flip={p.id}
+            className={"card-in transition-[opacity,transform] duration-[260ms] ease-[cubic-bezier(0.23,1,0.32,1)] " + (leaving.includes(p.id) ? "scale-90 opacity-0" : "")}
+            style={{ "--i": i } as React.CSSProperties}
+          >
+            <FavoriteCard product={p} onRemove={() => leave(p)} />
           </li>
         ))}
       </ul>
@@ -80,7 +99,7 @@ export function FavoritesList() {
   );
 }
 
-function FavoriteCard({ product: p }: { product: ProductSummary }) {
+function FavoriteCard({ product: p, onRemove }: { product: ProductSummary; onRemove: () => void }) {
   const href = `/producto/${p.slug}`;
   return (
     <article className="group relative">
@@ -89,7 +108,7 @@ function FavoriteCard({ product: p }: { product: ProductSummary }) {
           <ProductImage path={p.imagePath} alt="" categorySlug={p.categorySlug} sizes="(min-width: 640px) 33vw, 50vw" />
         </Link>
         <div className="absolute right-2.5 top-2.5">
-          <FavoriteButton product={p} />
+          <FavoriteButton product={p} onRemove={onRemove} />
         </div>
         <div className="absolute bottom-2.5 right-2.5">
           <CartButton product={p} variant="sm" />
