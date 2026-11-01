@@ -46,11 +46,13 @@ export async function renameTag(_prev: TagState, formData: FormData): Promise<Ta
 }
 
 /** Borra la etiqueta de la lista y de todos los productos. */
-export async function deleteTag(formData: FormData) {
+export async function deleteTag(formData: FormData): Promise<{ ok: boolean }> {
   const { supabase } = await requireAdmin();
   const name = nameSchema.safeParse(formData.get("name") ?? "");
-  if (!name.success) return;
-  await supabase.rpc("delete_tag", { p_name: name.data });
+  if (!name.success) return { ok: false };
+  const { error } = await supabase.rpc("delete_tag", { p_name: name.data });
+  if (error) return { ok: false };
   updateTag(CATALOG_TAG);
   revalidatePath("/admin/categorias");
+  return { ok: true };
 }

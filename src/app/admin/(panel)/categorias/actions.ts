@@ -1,6 +1,6 @@
 "use server";
 
-import { updateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin";
 import { CATALOG_TAG } from "@/lib/data/catalog";
@@ -45,10 +45,13 @@ export async function saveCategory(_prev: CategoryState, formData: FormData): Pr
   return { status: "ok", at: Date.now() };
 }
 
-export async function deleteCategory(formData: FormData) {
+export async function deleteCategory(formData: FormData): Promise<{ ok: boolean }> {
   const { supabase } = await requireAdmin();
   const id = z.uuid().parse(formData.get("id"));
   // Los productos de esta categoría quedan "sin categoría" (on delete set null).
-  await supabase.from("categories").delete().eq("id", id);
+  const { error } = await supabase.from("categories").delete().eq("id", id);
+  if (error) return { ok: false };
   updateTag(CATALOG_TAG);
+  revalidatePath("/admin/categorias");
+  return { ok: true };
 }

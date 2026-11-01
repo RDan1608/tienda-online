@@ -44,7 +44,7 @@ function Group({
           <ChevronDown className="size-[18px] shrink-0 text-muted transition-transform duration-200 ease-out group-open:rotate-180" />
         </span>
       </summary>
-      <div className="pb-5">{children}</div>
+      <div className="@container pb-5">{children}</div>
     </details>
   );
 }
@@ -117,7 +117,7 @@ export function FilterPanel({
 
       {tags.length > 0 && (
         <Group title="Estilo" value={filters.tag.length ? `${filters.tag.length} elegido${filters.tag.length > 1 ? "s" : ""}` : undefined} defaultOpen>
-          <ul className="grid grid-cols-2 gap-x-4">
+          <ul className="grid grid-cols-1 gap-x-4 @[18rem]:grid-cols-2">
             {tags.map((tag) => {
               const checked = filters.tag.includes(tag);
               const count = tagCounts[tag] ?? 0;
@@ -128,7 +128,7 @@ export function FilterPanel({
                 <li key={tag}>
                   <label
                     htmlFor={id}
-                    className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl text-[15px] capitalize transition-[opacity,background-color] duration-150 active:bg-powder/60 ${
+                    className={`flex min-h-12 min-w-0 cursor-pointer items-center gap-3 rounded-xl text-[15px] capitalize transition-[opacity,background-color] duration-150 active:bg-powder/60 ${
                       empty ? "pointer-events-none opacity-40" : ""
                     }`}
                   >
@@ -145,7 +145,7 @@ export function FilterPanel({
                     <span className="grid size-5 shrink-0 place-items-center rounded-md border-2 border-dusty text-ivory transition-colors duration-150 peer-checked:border-navy peer-checked:bg-navy peer-focus-visible:ring-2 peer-focus-visible:ring-steel peer-focus-visible:ring-offset-2 [&>svg]:scale-0 peer-checked:[&>svg]:scale-100">
                       <Check className="size-3.5 transition-transform duration-150 ease-out" strokeWidth={3} />
                     </span>
-                    <span className="flex-1">{tag}</span>
+                    <span className="min-w-0 flex-1 truncate">{tag}</span>
                     <span className="text-sm tabular-nums text-muted">{count}</span>
                   </label>
                 </li>

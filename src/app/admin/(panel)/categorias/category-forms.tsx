@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { Check, LoaderCircle, Trash2 } from "lucide-react";
 import type { Category } from "@/lib/types";
 import { useSubmit } from "@/lib/use-submit";
 import { deleteCategory, saveCategory, type CategoryState } from "./actions";
+import { notify } from "./notice";
 
 const input =
   "h-11 rounded-xl border border-border bg-ivory px-3 text-[15px] outline-none transition focus:border-steel focus:ring-4 focus:ring-powder";
@@ -22,9 +23,30 @@ export function CategoryRow({ category, productCount }: { category: Category; pr
   const [state, action, pending] = useActionState<CategoryState, FormData>(saveCategory, { status: "idle" });
   const [confirm, setConfirm] = useState(false);
   const onSubmit = useSubmit(action);
+  const [leaving, setLeaving] = useState(false);
+  const [removing, startRemoving] = useTransition();
+
+  useEffect(() => {
+    if (state.status === "ok") notify(`Categoría «${category.name}» guardada`, "ok");
+  }, [state, category.name]);
+
+  function remove(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const data = new FormData(e.currentTarget);
+    setLeaving(true);
+    startRemoving(async () => {
+      const result = await deleteCategory(data);
+      if (result.ok) {
+        notify(`Categoría «${category.name}» eliminada`, "removed");
+      } else {
+        setLeaving(false);
+        notify("No se pudo eliminar. Intenta otra vez.", "removed");
+      }
+    });
+  }
 
   return (
-    <li className="p-3 sm:p-4">
+    <li className={`p-3 sm:p-4 ${leaving ? "row-out" : ""}`}>
       <form onSubmit={onSubmit} className="flex flex-wrap items-center gap-2 sm:gap-3">
         <input type="hidden" name="id" value={category.id} />
         <input
@@ -45,7 +67,7 @@ export function CategoryRow({ category, productCount }: { category: Category; pr
         <Status state={state} />
       </form>
 
-      <form action={deleteCategory} className="mt-2 flex items-center gap-3 pl-1 text-xs text-muted">
+      <form onSubmit={remove} className="mt-2 flex items-center gap-3 pl-1 text-xs text-muted">
         <input type="hidden" name="id" value={category.id} />
         <span>
           /{category.slug} · {productCount} {productCount === 1 ? "producto" : "productos"}
@@ -55,7 +77,9 @@ export function CategoryRow({ category, productCount }: { category: Category; pr
             <span className="text-navy">
               {productCount > 0 ? "Sus productos quedarán sin categoría." : "¿Eliminar?"}
             </span>
-            <button className="font-medium text-rose-ink">Sí, eliminar</button>
+            <button disabled={removing} className="font-medium text-rose-ink disabled:opacity-60">
+              {removing ? "Eliminando…" : "Sí, eliminar"}
+            </button>
             <button type="button" onClick={() => setConfirm(false)} className="hover:text-navy">
               Cancelar
             </button>
@@ -80,7 +104,10 @@ export function CategoryForm() {
   const onSubmit = useSubmit(action);
 
   useEffect(() => {
-    if (state.status === "ok") formRef.current?.reset();
+    if (state.status !== "ok") return;
+    const field = formRef.current?.elements.namedItem("name") as HTMLInputElement | null;
+    notify(`Categoría «${field?.value.trim()}» creada`, "ok");
+    formRef.current?.reset();
   }, [state]);
 
   return (

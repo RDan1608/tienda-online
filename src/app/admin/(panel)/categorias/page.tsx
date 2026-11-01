@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/admin";
 import { CategoryForm, CategoryRow } from "./category-forms";
 import { TagCreate, TagRow } from "./tag-manager";
+import { NoticeToast } from "./notice";
 
 export const metadata: Metadata = { title: "Categorías" };
 
@@ -60,6 +61,7 @@ export default async function CategoriesPage() {
           </ul>
         )}
       </section>
+      <NoticeToast />
     </>
   );
 }

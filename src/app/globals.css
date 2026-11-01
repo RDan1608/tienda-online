@@ -395,6 +395,34 @@ input[type="search"]::-webkit-search-cancel-button {
   animation: step-in 260ms var(--ease-out);
 }
 
+/* Avisos del admin y fila recién creada / cambiada. */
+@keyframes notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+}
+.notice-in {
+  animation: notice-in 240ms var(--ease-out);
+}
+@keyframes row-flash {
+  from {
+    background-color: color-mix(in srgb, var(--color-steel, #6b8cae) 28%, transparent);
+  }
+}
+.row-flash {
+  animation: row-flash 1800ms var(--ease-out);
+}
+@keyframes row-out {
+  to {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
+.row-out {
+  animation: row-out 220ms var(--ease-out) forwards;
+}
+
 /* ───────── Transiciones de vista (navegación fluida) ───────── */
 /* Encabezado y barra inferior son los mismos en todas las páginas: se quedan quietos, no se funden. */
 header[data-site-header] {
@@ -402,6 +430,16 @@ header[data-site-header] {
 }
 nav[data-site-nav] {
   view-transition-name: site-nav;
+}
+/* Sin fundido cruzado: dos capas semitransparentes superpuestas dejaban la barra translúcida mientras cambiaba la página. */
+::view-transition-old(site-nav),
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-nav),
+::view-transition-new(site-header) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 ::view-transition-group(root) {
   animation-duration: 220ms;
@@ -463,7 +501,7 @@ nav[data-site-nav] {
 @keyframes header-scrolled {
   to {
     box-shadow: 0 8px 24px -18px rgb(54 77 102 / 0.45);
-    background-color: rgb(247 246 242 / 0.94);
+    background-color: color-mix(in srgb, var(--ivory) 94%, transparent);
   }
 }
 @supports (animation-timeline: scroll()) {
