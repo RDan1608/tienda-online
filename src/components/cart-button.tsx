@@ -111,7 +111,7 @@ export function CartButton({ product, variant = "lg" }: { product: ProductSummar
           >
             <ShoppingBag className="size-5" /> Agregar al pedido
           </button>
-          <p className="mt-2.5 text-center text-xs text-muted">No se cobra nada ahora · coordinamos contigo</p>
+          <p className="mt-2.5 text-center text-xs text-muted">Sin pago en línea</p>
         </div>
       ) : (
         <div className="swap-in">

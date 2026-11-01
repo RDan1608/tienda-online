@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpDown, Check, ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
+import { ArrowUpDown, Check, ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from "lucide-react";
 import { PAGE_SIZE, sortOptions, type SortValue } from "@/lib/catalog-params";
 import { allTags, facetCounts, priceBounds, runCatalog } from "@/lib/catalog-filter";
 import { useFlip } from "@/lib/use-flip";
@@ -26,14 +26,27 @@ export function CatalogClient({ items, categories }: { items: CatalogItem[]; cat
   const tags = useMemo(() => allTags(items), [items]);
   const bounds = useMemo(() => priceBounds(items), [items]);
 
-  const page = Math.min(Math.max(filters.page, 1), 20);
-  const visible = results.slice(0, page * PAGE_SIZE);
+  const total = results.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const page = Math.min(Math.max(filters.page, 1), totalPages);
+  const start = (page - 1) * PAGE_SIZE;
+  const visible = results.slice(start, start + PAGE_SIZE);
   useFlip(grid, visible.map((p) => p.id).join());
 
+  // Al cambiar de página se vuelve al inicio de los resultados (no al inicio de la página).
+  const goPage = (n: number) => {
+    api.setPage(n);
+    requestAnimationFrame(() =>
+      document.getElementById("resultados")?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "start",
+      }),
+    );
+  };
+
   const panelActive = filters.tag.length + (filters.min != null || filters.max != null ? 1 : 0);
-  const total = results.length;
   const countLabel = `${total} ${total === 1 ? "producto" : "productos"}`;
-  const sortLabel = sortOptions.find((o) => o.value === filters.sort)?.label ?? "Ordenar";
+  const sortShort = { nuevo: "Nuevos", popular: "Populares", "precio-asc": "Precio ↑", "precio-desc": "Precio ↓" }[filters.sort];
 
   const panel = <FilterPanel api={api} bounds={bounds} tags={tags} tagCounts={facets.tag} />;
 
@@ -42,57 +55,60 @@ export function CatalogClient({ items, categories }: { items: CatalogItem[]; cat
       <SearchBox api={api} />
       <CategoryTabs api={api} categories={categories} counts={facets.cat} />
 
-      {/* Barra fija bajo el encabezado: siempre a mano mientras se recorre la lista */}
-      <div className="sticky top-16 z-30 -mx-4 border-b border-border/70 bg-ivory/90 px-4 backdrop-blur-md sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-b-0 lg:bg-transparent lg:px-0 lg:backdrop-blur-none">
-        <div className="flex h-12 items-center justify-between gap-3">
-          <p className="text-sm tabular-nums text-muted" aria-live="polite">
-            {countLabel}
-          </p>
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setSheet("filters")}
-              className="relative inline-flex h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition-colors active:bg-powder/70 lg:hidden"
-            >
-              <SlidersHorizontal className="size-[18px]" />
-              Filtrar
-              {panelActive > 0 && (
-                <span className="pill-in grid size-[18px] place-items-center rounded-full bg-rose-ink text-[11px] font-bold text-white">
-                  {panelActive}
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setSheet("sort")}
-              className="inline-flex h-10 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-colors active:bg-powder/70 lg:hidden"
-            >
-              <ArrowUpDown className="size-[17px]" />
-              <span className="max-w-[9.5rem] truncate">{sortLabel}</span>
-              <ChevronDown className="size-4 text-muted" />
-            </button>
-            {/* Escritorio: lista desplegable nativa */}
-            <label className="hidden items-center gap-2 text-sm lg:flex">
-              <span className="text-muted">Ordenar</span>
-              <select
-                value={filters.sort}
-                onChange={(e) => update({ sort: e.target.value as SortValue })}
-                className="h-10 rounded-full border border-border bg-surface px-4 pr-8 text-sm font-medium outline-none transition-colors hover:border-steel focus:border-steel"
-              >
-                {sortOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+      {/* Barra fija (móvil): dos acciones iguales, a la altura del pulgar */}
+      <div className="sticky top-16 z-30 -mx-4 border-b border-border/70 bg-ivory/90 px-4 py-2.5 backdrop-blur-md sm:-mx-6 sm:px-6 lg:hidden">
+        <div className="grid grid-cols-2 gap-2.5">
+          <button
+            type="button"
+            onClick={() => setSheet("filters")}
+            className="relative inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border bg-surface text-sm font-semibold transition active:scale-[0.97]"
+          >
+            <SlidersHorizontal className="size-[17px]" />
+            Filtrar
+            {panelActive > 0 && (
+              <span className="pill-in grid size-[18px] place-items-center rounded-full bg-rose-ink text-[11px] font-bold text-white">
+                {panelActive}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSheet("sort")}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border bg-surface px-3 text-sm font-semibold transition active:scale-[0.97]"
+          >
+            <ArrowUpDown className="size-[17px] shrink-0" />
+            <span className="truncate">
+              Ordenar: <span className="font-medium text-muted">{sortShort}</span>
+            </span>
+          </button>
         </div>
       </div>
 
-      <AppliedSummary api={api} categories={categories} />
+      {/* Resultados: cuántos hay y qué se está filtrando, en su propia línea */}
+      <div id="resultados" className="scroll-mt-32 pt-4">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[15px] font-bold tabular-nums" aria-live="polite">
+            {countLabel}
+          </p>
+          <label className="hidden items-center gap-2 text-sm lg:flex">
+            <span className="text-muted">Ordenar</span>
+            <select
+              value={filters.sort}
+              onChange={(e) => update({ sort: e.target.value as SortValue })}
+              className="h-10 rounded-full border border-border bg-surface px-4 pr-8 text-sm font-medium outline-none transition-colors hover:border-steel focus:border-steel"
+            >
+              {sortOptions.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <AppliedSummary api={api} categories={categories} />
+      </div>
 
-      <div className="mt-3 gap-10 lg:grid lg:grid-cols-[250px_1fr]">
+      <div className="mt-4 gap-10 lg:grid lg:grid-cols-[250px_1fr]">
         <aside className="hidden lg:block" aria-label="Filtros">
           <div className="sticky top-24">{panel}</div>
         </aside>
@@ -108,17 +124,7 @@ export function CatalogClient({ items, categories }: { items: CatalogItem[]; cat
                   </div>
                 ))}
               </div>
-              {visible.length < total && (
-                <div className="mt-10 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => api.setPage(page + 1)}
-                    className="inline-flex h-12 items-center rounded-full bg-powder px-8 text-sm font-semibold transition active:scale-95"
-                  >
-                    Ver más ({total - visible.length})
-                  </button>
-                </div>
-              )}
+              <Pagination page={page} totalPages={totalPages} from={start + 1} to={start + visible.length} total={total} onPage={goPage} />
             </>
           ) : (
             <EmptyResults api={api} items={items} categories={categories} />
@@ -440,5 +446,73 @@ function SortOptions({ value, onPick }: { value: SortValue; onPick: (v: SortValu
         );
       })}
     </div>
+  );
+}
+
+function pageList(page: number, total: number): (number | "…")[] {
+  const nums = [...new Set([1, total, page - 1, page, page + 1])].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const out: (number | "…")[] = [];
+  nums.forEach((n, i) => {
+    if (i && n - nums[i - 1] > 1) out.push("…");
+    out.push(n);
+  });
+  return out;
+}
+
+/** Paginador numerado: anterior, páginas con "…" y siguiente. Solo aparece si hay más de una página. */
+function Pagination({
+  page,
+  totalPages,
+  from,
+  to,
+  total,
+  onPage,
+}: {
+  page: number;
+  totalPages: number;
+  from: number;
+  to: number;
+  total: number;
+  onPage: (n: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+  const nav =
+    "grid size-10 place-items-center rounded-full text-sm font-semibold tabular-nums transition-[background-color,transform] duration-150 active:scale-90 disabled:opacity-30 disabled:active:scale-100";
+
+  return (
+    <nav aria-label="Paginación" className="mt-10">
+      <ul className="flex items-center justify-center gap-1">
+        <li>
+          <button type="button" onClick={() => onPage(page - 1)} disabled={page === 1} aria-label="Página anterior" className={`${nav} hover:bg-powder`}>
+            <ChevronLeft className="size-5" />
+          </button>
+        </li>
+        {pageList(page, totalPages).map((n, i) => (
+          <li key={`${n}-${i}`}>
+            {n === "…" ? (
+              <span aria-hidden className="grid size-8 place-items-center text-muted">…</span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onPage(n)}
+                aria-label={`Página ${n}`}
+                aria-current={n === page ? "page" : undefined}
+                className={`${nav} ${n === page ? "bg-navy text-ivory" : "hover:bg-powder"}`}
+              >
+                {n}
+              </button>
+            )}
+          </li>
+        ))}
+        <li>
+          <button type="button" onClick={() => onPage(page + 1)} disabled={page === totalPages} aria-label="Página siguiente" className={`${nav} hover:bg-powder`}>
+            <ChevronRight className="size-5" />
+          </button>
+        </li>
+      </ul>
+      <p className="mt-3 text-center text-xs tabular-nums text-muted">
+        Mostrando {from}–{to} de {total}
+      </p>
+    </nav>
   );
 }

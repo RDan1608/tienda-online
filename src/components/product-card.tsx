@@ -32,9 +32,6 @@ export function ProductCard({ product, priority }: { product: CardProduct; prior
       </div>
 
       <Link href={href} className="mt-3 block space-y-0.5 rounded-md px-0.5">
-        {product.category && (
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">{product.category.name}</p>
-        )}
         <h3 className="line-clamp-2 text-sm font-medium leading-snug">{product.name}</h3>
         <p className="text-[15px] font-bold tabular-nums">{formatPrice(product.price)}</p>
       </Link>

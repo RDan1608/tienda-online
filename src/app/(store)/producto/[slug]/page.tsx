@@ -117,10 +117,10 @@ async function ProductDetail({ params }: Pick<PageProps<"/producto/[slug]">, "pa
 
           {product.description && (
             <section className="mt-6 rounded-3xl bg-surface p-5 shadow-soft ring-1 ring-border" aria-labelledby="detalles">
-              <h2 id="detalles" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+              <h2 id="detalles" className="sr-only">
                 Detalles
               </h2>
-              <p className="mt-2 whitespace-pre-line leading-relaxed text-navy/90">{product.description}</p>
+              <p className="whitespace-pre-line leading-relaxed text-navy/90">{product.description}</p>
               {product.tags.length > 0 && (
                 <p className="mt-4 flex flex-wrap items-center gap-x-1 gap-y-1 border-t border-border pt-4 text-sm">
                   <span className="text-muted">Estilo:</span>
@@ -140,19 +140,6 @@ async function ProductDetail({ params }: Pick<PageProps<"/producto/[slug]">, "pa
             </section>
           )}
 
-          <section className="mt-4 rounded-3xl bg-butter p-5" aria-labelledby="como-pedir">
-            <h2 id="como-pedir" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-honey-ink">
-              Cómo funciona tu pedido
-            </h2>
-            <ol className="mt-3 space-y-2.5 text-[15px]">
-              {["Agrega lo que te guste a tu pedido.", "Déjanos tu nombre y teléfono; no se cobra nada.", "Te contactamos para coordinar pago y entrega."].map((t, i) => (
-                <li key={t} className="flex items-start gap-3">
-                  <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-honey text-[11px] font-bold">{i + 1}</span>
-                  {t}
-                </li>
-              ))}
-            </ol>
-          </section>
         </div>
       </div>
 

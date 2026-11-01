@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, Copy, LoaderCircle, Minus, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Check, ChevronLeft, Copy, LoaderCircle, Minus, Plus, Trash2 } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { site } from "@/lib/site";
 import { cartTotal, useCart, useHydrated, type CartItem } from "@/lib/stores";
@@ -12,6 +12,10 @@ import { EmptyState } from "@/components/empty-state";
 import { useSubmit } from "@/lib/use-submit";
 import { createOrder, type OrderState } from "./actions";
 
+/**
+ * Pedido en dos pasos en móvil (1 · revisar, 2 · tus datos) para no mostrar todo a la vez.
+ * En escritorio los dos pasos conviven en dos columnas.
+ */
 export function CartView() {
   const hydrated = useHydrated();
   const items = useCart((s) => s.items);
@@ -25,10 +29,15 @@ export function CartView() {
   const [state, formAction, pending] = useActionState<OrderState, FormData>(createOrder, {
     status: "idle",
   });
-  const [showEmail, setShowEmail] = useState(false);
+  const [step, setStep] = useState<1 | 2>(1);
 
   const onSubmit = useSubmit(formAction);
   const hasItems = hydrated && items.length > 0 && state.status !== "success";
+
+  const goStep = (n: 1 | 2) => {
+    setStep(n);
+    window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  };
 
   // Pedido creado → vaciar carrito.
   useEffect(() => {
@@ -52,7 +61,7 @@ export function CartView() {
       <EmptyState
         art="pedido"
         title="Tu pedido está vacío"
-        text="Agrega lo que te guste desde el catálogo y aquí lo armas."
+        text="Agrega lo que te guste desde el catálogo."
         cta="Explorar catálogo"
       />
     );
@@ -60,7 +69,8 @@ export function CartView() {
 
   const total = cartTotal(items);
   const units = items.reduce((n, i) => n + i.qty, 0);
-  const submitLabel = pending ? (
+  const unitsLabel = `${units} ${units === 1 ? "producto" : "productos"}`;
+  const sending = pending ? (
     <>
       <LoaderCircle className="size-[18px] animate-spin" /> Enviando…
     </>
@@ -69,34 +79,56 @@ export function CartView() {
   );
 
   return (
-    <div className="mt-6 grid gap-8 pb-24 lg:grid-cols-[1fr_400px] lg:gap-14 lg:pb-0">
-      <section aria-label="Productos">
+    <div className="mt-5 grid gap-6 pb-28 lg:grid-cols-[1fr_400px] lg:gap-14 lg:pb-0">
+      <Steps step={step} onStep={goStep} />
+
+      {/* Paso 1 · revisar el pedido */}
+      <section key={`items-${step}`} aria-label="Tu pedido" className={`step-in ${step === 2 ? "max-lg:hidden" : ""}`}>
         {removed > 0 && (
           <p className="mb-4 rounded-2xl bg-butter p-3.5 text-sm">
             {removed === 1 ? "Un producto ya no está disponible" : `${removed} productos ya no están disponibles`} y
             se quitó de tu pedido.
           </p>
         )}
-        <p className="mb-1 text-sm text-muted">
-          {units} {units === 1 ? "producto" : "productos"}
-        </p>
         <ul className="divide-y divide-border border-y border-border">
           {items.map((item) => (
             <CartRow key={item.id} item={item} />
           ))}
         </ul>
-        <div className="mt-5 flex items-baseline justify-between rounded-2xl bg-powder/60 px-5 py-4">
-          <span className="text-[15px] font-medium">Total estimado</span>
+        <div className="mt-5 flex items-baseline justify-between px-1">
+          <span className="text-[15px] text-muted">Total estimado</span>
           <span className="text-2xl font-extrabold tabular-nums tracking-[-0.02em]">{formatPrice(total)}</span>
         </div>
+        <Link
+          href="/catalogo"
+          className="mt-5 inline-flex h-11 items-center gap-1.5 rounded-full px-1 text-sm font-semibold text-muted transition-colors hover:text-navy"
+        >
+          <ChevronLeft className="size-4" /> Seguir viendo productos
+        </Link>
       </section>
 
-      <section aria-labelledby="datos" className="lg:sticky lg:top-24 lg:self-start">
+      {/* Paso 2 · tus datos */}
+      <section
+        key={`form-${step}`}
+        aria-labelledby="datos"
+        className={`step-in lg:sticky lg:top-24 lg:self-start ${step === 1 ? "max-lg:hidden" : ""}`}
+      >
+        <button
+          type="button"
+          onClick={() => goStep(1)}
+          className="mb-4 flex w-full items-center justify-between rounded-2xl bg-powder/60 px-4 py-3 text-left transition active:scale-[0.99] lg:hidden"
+        >
+          <span className="text-[15px]">
+            <span className="font-semibold">{unitsLabel}</span> <span className="text-muted">· {formatPrice(total)}</span>
+          </span>
+          <span className="text-sm font-semibold underline underline-offset-4">Editar</span>
+        </button>
+
         <form id="pedido" onSubmit={onSubmit} className="rounded-[28px] bg-surface p-5 shadow-soft ring-1 ring-border sm:p-6" noValidate>
-          <h2 id="datos" className="font-display text-xl font-bold tracking-[-0.025em]">
-            ¿A quién se lo enviamos?
+          <h2 id="datos" className="font-display text-xl font-bold tracking-[-0.03em]">
+            Tus datos
           </h2>
-          <p className="mt-1 text-sm text-muted">{site.orderInfo}</p>
+          <p className="mt-1 text-sm text-muted">Te contactamos para coordinar el pago y la entrega. No se cobra nada ahora.</p>
 
           <input
             type="hidden"
@@ -118,26 +150,12 @@ export function CartView() {
               required
               state={state}
             />
-            <Field
-              label="Notas (opcional)"
-              name="notes"
-              textarea
-              placeholder="Color preferido, para regalo, zona de entrega…"
-              state={state}
-            />
-            {showEmail ? (
-              <div className="swap-in">
-                <Field label="Correo (opcional)" name="email" type="email" autoComplete="email" autoFocus state={state} />
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowEmail(true)}
-                className="inline-flex h-10 items-center gap-1.5 rounded-lg text-sm font-semibold text-navy underline-offset-4 hover:underline"
-              >
-                <Plus className="size-4" /> Agregar correo (opcional)
-              </button>
-            )}
+            <Optional linkLabel="Agregar una nota">
+              <Field label="Nota (opcional)" name="notes" textarea placeholder="Color preferido, para regalo…" autoFocus state={state} />
+            </Optional>
+            <Optional linkLabel="Agregar correo">
+              <Field label="Correo (opcional)" name="email" type="email" autoComplete="email" autoFocus state={state} />
+            </Optional>
           </div>
 
           {state.status === "error" && (
@@ -152,30 +170,85 @@ export function CartView() {
             disabled={pending}
             className="mt-6 hidden h-14 w-full items-center justify-center gap-2 rounded-full bg-navy text-[15px] font-semibold text-ivory shadow-soft transition duration-150 hover:bg-navy-deep active:scale-[0.98] disabled:opacity-70 lg:inline-flex"
           >
-            {submitLabel} · {formatPrice(total)}
+            {sending} · {formatPrice(total)}
           </button>
-          <p className="mt-3 text-center text-xs text-muted">No se cobra nada ahora. El total final lo confirmamos contigo.</p>
         </form>
       </section>
 
-      {/* Móvil: total y botón siempre a la vista, sobre la navegación */}
+      {/* Móvil: total y acción del paso siempre a la vista, sobre la navegación */}
       <div className="fixed inset-x-0 bottom-[var(--mobile-nav-h)] z-30 border-t border-border bg-ivory/95 px-4 py-2.5 backdrop-blur-md lg:hidden">
         <div className="mx-auto flex max-w-md items-center gap-4">
           <div>
-            <p className="text-xs text-muted">Total estimado</p>
+            <p className="text-xs text-muted">{unitsLabel}</p>
             <p className="text-lg font-extrabold tabular-nums leading-tight">{formatPrice(total)}</p>
           </div>
-          <button
-            type="submit"
-            form="pedido"
-            disabled={pending}
-            className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-navy text-[15px] font-semibold text-ivory transition active:scale-[0.98] disabled:opacity-70"
-          >
-            {submitLabel}
-          </button>
+          {step === 1 ? (
+            // key distinta: si React reutilizara este botón como "submit", el MISMO toque enviaría el formulario.
+            <button
+              key="siguiente"
+              type="button"
+              onClick={() => goStep(2)}
+              className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-navy text-[15px] font-semibold text-ivory transition active:scale-[0.98]"
+            >
+              Continuar <ArrowRight className="size-[18px]" />
+            </button>
+          ) : (
+            <button
+              key="enviar"
+              type="submit"
+              form="pedido"
+              disabled={pending}
+              className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-navy text-[15px] font-semibold text-ivory transition active:scale-[0.98] disabled:opacity-70"
+            >
+              {sending}
+            </button>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+/** Indicador de progreso (solo móvil): 1 Pedido → 2 Datos. El paso 1 se puede volver a tocar. */
+function Steps({ step, onStep }: { step: 1 | 2; onStep: (n: 1 | 2) => void }) {
+  const dot = (active: boolean, done: boolean) =>
+    `grid size-6 place-items-center rounded-full text-xs font-bold transition-colors duration-200 ${
+      active || done ? "bg-navy text-ivory" : "bg-powder text-muted"
+    }`;
+  return (
+    <ol aria-label="Progreso del pedido" className="flex items-center gap-3 lg:hidden lg:col-span-2">
+      <li className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onStep(1)}
+          disabled={step === 1}
+          aria-current={step === 1 ? "step" : undefined}
+          className="flex items-center gap-2 text-sm font-semibold"
+        >
+          <span className={dot(step === 1, step === 2)}>{step === 2 ? <Check className="size-3.5" strokeWidth={3} /> : 1}</span>
+          Pedido
+        </button>
+      </li>
+      <li aria-hidden className="h-px w-8 bg-border" />
+      <li aria-current={step === 2 ? "step" : undefined} className={`flex items-center gap-2 text-sm font-semibold ${step === 2 ? "" : "text-muted"}`}>
+        <span className={dot(step === 2, false)}>2</span>
+        Datos
+      </li>
+    </ol>
+  );
+}
+
+function Optional({ linkLabel, children }: { linkLabel: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  if (open) return <div className="swap-in">{children}</div>;
+  return (
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className="flex h-10 items-center gap-1.5 text-sm font-semibold underline-offset-4 hover:underline"
+    >
+      <Plus className="size-4" /> {linkLabel}
+    </button>
   );
 }
 
@@ -220,7 +293,7 @@ function CartRow({ item }: { item: CartItem }) {
             <Plus className="size-4" />
           </button>
         </div>
-        <p className="text-xs text-muted">{formatPrice(item.price)} c/u</p>
+        {item.qty > 1 && <p className="text-xs text-muted">{formatPrice(item.price)} c/u</p>}
       </div>
     </SummaryRow>
   );
@@ -253,6 +326,7 @@ function Field({
           rows={3}
           maxLength={1000}
           placeholder={props.placeholder}
+          autoFocus={props.autoFocus}
           aria-invalid={!!error}
           aria-describedby={describedBy}
           className={`${cls} resize-none py-3`}
@@ -296,7 +370,7 @@ function Confirmation({ code, total }: { code: string; total: number }) {
 
       <div className="mt-6 flex items-center justify-between gap-3 rounded-2xl bg-butter py-3 pl-5 pr-3">
         <div className="text-left">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-honey-ink">Tu código</p>
+          <p className="text-xs font-semibold text-honey-ink">Tu código</p>
           <p className="font-display text-2xl font-extrabold tracking-[0.04em] tabular-nums">{code}</p>
         </div>
         <button
@@ -311,15 +385,7 @@ function Confirmation({ code, total }: { code: string; total: number }) {
       <p className="mt-3 text-sm text-muted">
         Total estimado <strong className="text-navy">{formatPrice(total)}</strong>
       </p>
-
-      <ol className="mt-8 space-y-3 text-left">
-        {["Recibimos tu pedido y lo revisamos.", "Te contactamos para coordinar el pago y la entrega."].map((t, i) => (
-          <li key={t} className="flex items-start gap-3 rounded-2xl bg-powder/50 p-4">
-            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-navy text-xs font-bold text-ivory">{i + 1}</span>
-            <span className="text-[15px]">{t}</span>
-          </li>
-        ))}
-      </ol>
+      <p className="mt-6 text-[15px]">Te contactaremos para coordinar el pago y la entrega.</p>
 
       <div className="mt-8 flex flex-col gap-3">
         {wa && (

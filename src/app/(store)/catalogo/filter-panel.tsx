@@ -36,7 +36,7 @@ function Group({
   children: React.ReactNode;
 }) {
   return (
-    <details open={defaultOpen} className="group border-b border-border last:border-b-0">
+    <details open={defaultOpen} className="group rounded-2xl bg-surface px-4 ring-1 ring-border">
       <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 py-3 [&::-webkit-details-marker]:hidden">
         <span className="text-[15px] font-semibold">{title}</span>
         <span className="flex min-w-0 items-center gap-2">
@@ -75,7 +75,7 @@ export function FilterPanel({
   const ranges = bounds ? quickRanges(bounds) : [];
 
   return (
-    <div>
+    <div className="space-y-3">
       {bounds && (
         <Group title="Precio" value={priceValue} defaultOpen>
           <PriceRange
@@ -117,7 +117,7 @@ export function FilterPanel({
 
       {tags.length > 0 && (
         <Group title="Estilo" value={filters.tag.length ? `${filters.tag.length} elegido${filters.tag.length > 1 ? "s" : ""}` : undefined} defaultOpen>
-          <ul>
+          <ul className="grid grid-cols-2 gap-x-4">
             {tags.map((tag) => {
               const checked = filters.tag.includes(tag);
               const count = tagCounts[tag] ?? 0;
