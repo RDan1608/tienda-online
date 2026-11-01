@@ -10,7 +10,7 @@ type NewOrder = {
   code: string;
   total: number;
   customer: { name: string; phone: string; email: string; notes: string };
-  items: { product_id: string; qty: number }[];
+  items: { product_id: string; qty: number; color?: string | null }[];
 };
 
 const escape = (s: string) =>
@@ -36,7 +36,7 @@ export async function sendNewOrderEmail(order: NewOrder) {
   const rows = order.items
     .map((i) => {
       const p = byId.get(i.product_id);
-      return `<tr><td style="padding:6px 0">${escape(p?.name ?? "Producto")} × ${i.qty}</td><td style="padding:6px 0;text-align:right">${formatPrice(Number(p?.price ?? 0) * i.qty)}</td></tr>`;
+      return `<tr><td style="padding:6px 0">${escape(p?.name ?? "Producto")}${i.color ? ` · ${escape(i.color)}` : ""} × ${i.qty}</td><td style="padding:6px 0;text-align:right">${formatPrice(Number(p?.price ?? 0) * i.qty)}</td></tr>`;
     })
     .join("");
 

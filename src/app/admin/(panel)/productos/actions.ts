@@ -16,6 +16,7 @@ const schema = z.object({
   price: z.coerce.number("Precio inválido").min(0, "Precio inválido").max(1_000_000, "Precio demasiado alto"),
   category_id: z.union([z.uuid(), z.literal("")]),
   tags: z.string().max(300, "Demasiadas etiquetas"),
+  colors: z.string().max(500, "Demasiados colores"),
   images: z
     .array(
       z.object({
@@ -39,6 +40,18 @@ function parseTags(raw: string) {
   return [...new Set(tags)].slice(0, 10);
 }
 
+function parseColors(raw: string) {
+  const seen = new Set<string>();
+  const colors: string[] = [];
+  for (const c of raw.split(",").map((x) => x.trim().replace(/s+/g, " ")).filter((x) => x && x.length <= 30)) {
+    if (!seen.has(c.toLowerCase())) {
+      seen.add(c.toLowerCase());
+      colors.push(c);
+    }
+  }
+  return colors.slice(0, 12);
+}
+
 export async function saveProduct(_prev: ProductState, formData: FormData): Promise<ProductState> {
   const { supabase } = await requireAdmin();
 
@@ -56,6 +69,7 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
     price: formData.get("price") ?? "",
     category_id: formData.get("category_id") ?? "",
     tags: formData.get("tags") ?? "",
+    colors: formData.get("colors") ?? "",
     images,
   });
 
@@ -77,6 +91,7 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
     price: Math.round(d.price * 100) / 100,
     category_id: d.category_id || null,
     tags: parseTags(d.tags),
+    colors: parseColors(d.colors),
     is_active: formData.get("is_active") === "on",
     is_featured: formData.get("is_featured") === "on",
   };

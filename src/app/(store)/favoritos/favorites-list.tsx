@@ -52,7 +52,8 @@ export function FavoritesList() {
   }
 
   // Solo los que todavía no están en el pedido: así "Agregar todo" nunca duplica cantidades.
-  const pending = items.filter((p) => !cart.some((c) => c.id === p.id));
+  // Los que tienen colores se eligen en su página: no se agregan a ciegas.
+  const pending = items.filter((p) => p.colors.length === 0 && !cart.some((c) => c.id === p.id));
 
   return (
     <>

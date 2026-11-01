@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { Minus, Palette, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { useCartLine } from "@/lib/stores";
 import type { ProductSummary } from "@/lib/types";
 
@@ -14,8 +14,23 @@ const MAX_QTY = 99;
  * Tras agregar, se CONVIERTE en un contador con la cantidad real del carrito: tocar de nuevo
  * ya no suma a ciegas, y "−" en 1 quita el producto (con "Deshacer" en el aviso).
  */
-export function CartButton({ product, variant = "lg" }: { product: ProductSummary; variant?: Variant }) {
-  const line = useCartLine(product);
+export function CartButton({
+  product,
+  variant = "lg",
+  color = null,
+}: {
+  product: ProductSummary;
+  variant?: Variant;
+  /** Color elegido en el detalle (solo cuenta si el producto tiene colores). */
+  color?: string | null;
+}) {
+  const line = useCartLine(product, color);
+  // Con colores, primero hay que elegir uno: sin eso no se sabe qué agregar.
+  const needsColor = product.colors.length > 0 && !color;
+  const pickColor = () => {
+    navigator.vibrate?.(8);
+    document.getElementById("colores")?.scrollIntoView({ block: "center", behavior: "smooth" });
+  };
   const { qty, dec } = line;
   const inc = () => {
     navigator.vibrate?.(8); // vibración leve: confirma el toque sin mirar
@@ -27,6 +42,18 @@ export function CartButton({ product, variant = "lg" }: { product: ProductSummar
 
   // ───────── Tarjeta: "+" flotante → contador compacto ─────────
   if (variant === "sm") {
+    // En la tarjeta no se puede elegir color: lleva al detalle del producto.
+    if (product.colors.length > 0) {
+      return (
+        <Link
+          href={`/producto/${product.slug}`}
+          aria-label={`Elegir color de ${product.name}`}
+          className="relative grid size-9 place-items-center rounded-full bg-navy text-ivory shadow-float transition-transform duration-150 ease-out before:absolute before:-inset-1.5 active:scale-90"
+        >
+          <Palette className="size-[17px]" strokeWidth={2} />
+        </Link>
+      );
+    }
     if (qty === 0) {
       return (
         <button
@@ -71,10 +98,11 @@ export function CartButton({ product, variant = "lg" }: { product: ProductSummar
       return (
         <button
           type="button"
-          onClick={inc}
+          onClick={needsColor ? pickColor : inc}
           className="swap-in inline-flex h-12 shrink-0 items-center gap-2 rounded-full bg-navy px-6 text-sm font-semibold text-ivory transition duration-150 active:scale-95"
         >
-          <ShoppingBag className="size-[18px]" /> Agregar
+          {needsColor ? <Palette className="size-[18px]" /> : <ShoppingBag className="size-[18px]" />}
+          {needsColor ? "Elige color" : "Agregar"}
         </button>
       );
     }
@@ -111,10 +139,11 @@ export function CartButton({ product, variant = "lg" }: { product: ProductSummar
         <div className="swap-in">
           <button
             type="button"
-            onClick={inc}
+            onClick={needsColor ? pickColor : inc}
             className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-navy text-[15px] font-semibold text-ivory shadow-soft transition duration-150 hover:bg-navy-deep active:scale-[0.98]"
           >
-            <ShoppingBag className="size-5" /> Agregar al pedido
+            {needsColor ? <Palette className="size-5" /> : <ShoppingBag className="size-5" />}
+            {needsColor ? "Elige un color para agregar" : "Agregar al pedido"}
           </button>
           <p className="mt-2.5 text-center text-xs text-muted">Sin pago en línea</p>
         </div>

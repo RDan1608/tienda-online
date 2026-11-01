@@ -93,7 +93,8 @@ function OpenLot({ lot, orders }: { lot: Batch; orders: LotOrder[] }) {
   const toBuy = new Map<string, { name: string; qty: number }>();
   for (const o of orders.filter((o) => o.status !== "nuevo"))
     for (const i of o.items) {
-      const key = i.product_id ?? i.name_snapshot;
+      // El nombre del renglón incluye el color: cada color se pide por separado al proveedor.
+      const key = `${i.product_id ?? ""}|${i.name_snapshot}`;
       const cur = toBuy.get(key) ?? { name: i.name_snapshot, qty: 0 };
       cur.qty += i.qty;
       toBuy.set(key, cur);

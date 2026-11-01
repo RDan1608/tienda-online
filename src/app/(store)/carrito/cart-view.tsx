@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Check, ChevronLeft, Copy, LoaderCircle, Minus, Plus, Trash2 } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { site } from "@/lib/site";
-import { cartTotal, useCart, useHydrated, type CartItem } from "@/lib/stores";
+import { cartTotal, itemKey, useCart, useHydrated, type CartItem } from "@/lib/stores";
 import { useFreshProducts } from "@/lib/use-fresh-products";
 import { OrderNote } from "@/components/order-note";
 import { SummaryRow } from "@/components/summary-row";
@@ -112,7 +112,7 @@ export function CartView() {
         )}
         <ul className="divide-y divide-border border-y border-border">
           {items.map((item) => (
-            <CartRow key={item.id} item={item} />
+            <CartRow key={itemKey(item)} item={item} />
           ))}
         </ul>
         <dl className="mt-5 space-y-2.5 rounded-[24px] bg-powder/50 p-5 text-[15px]">
@@ -163,7 +163,7 @@ export function CartView() {
           <input
             type="hidden"
             name="items"
-            value={JSON.stringify(items.map((i) => ({ product_id: i.id, qty: i.qty })))}
+            value={JSON.stringify(items.map((i) => ({ product_id: i.id, qty: i.qty, color: i.color })))}
           />
           {/* honeypot: invisible para personas */}
           <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden />
@@ -291,7 +291,7 @@ function CartRow({ item }: { item: CartItem }) {
   // Se pliega y desvanece, y recién entonces sale del pedido (con "Deshacer" en el aviso).
   const leave = () => {
     setLeaving(true);
-    setTimeout(() => remove(item.id), 280);
+    setTimeout(() => remove(itemKey(item)), 280);
   };
   const MinusIcon = item.qty === 1 ? Trash2 : Minus;
 
@@ -299,13 +299,14 @@ function CartRow({ item }: { item: CartItem }) {
     <SummaryRow
       leaving={leaving}
       product={item}
+      detail={item.color}
       meta={<p className="shrink-0 text-[15px] font-bold tabular-nums">{formatPrice(item.price * item.qty)}</p>}
     >
       <div className="flex items-center justify-between gap-3">
         <div className="flex h-10 items-center rounded-full bg-powder/70 p-0.5">
           <button
             type="button"
-            onClick={() => (item.qty === 1 ? leave() : dec(item.id))}
+            onClick={() => (item.qty === 1 ? leave() : dec(itemKey(item)))}
             aria-label={item.qty === 1 ? `Quitar ${item.name} del pedido` : `Quitar uno de ${item.name}`}
             className="grid size-9 place-items-center rounded-full bg-ivory shadow-soft transition-transform duration-150 active:scale-90"
           >
@@ -316,7 +317,7 @@ function CartRow({ item }: { item: CartItem }) {
           </span>
           <button
             type="button"
-            onClick={() => add(item, 1)}
+            onClick={() => add(item, 1, item.color)}
             disabled={item.qty >= 99}
             aria-label={`Agregar uno más de ${item.name}`}
             className="grid size-9 place-items-center rounded-full bg-navy text-ivory transition-transform duration-150 active:scale-90 disabled:opacity-40"

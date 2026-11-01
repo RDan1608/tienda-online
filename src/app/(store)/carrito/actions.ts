@@ -7,7 +7,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { sendNewOrderEmail } from "@/lib/email";
 
 const itemsSchema = z
-  .array(z.object({ product_id: z.uuid(), qty: z.int().min(1).max(99) }))
+  .array(z.object({ product_id: z.uuid(), qty: z.int().min(1).max(99), color: z.string().trim().max(40).nullable().optional() }))
   .min(1, "Tu carrito está vacío")
   .max(50);
 

@@ -9,6 +9,7 @@ import { toWebp } from "@/lib/image-compress";
 import type { Category } from "@/lib/types";
 import { useSubmit } from "@/lib/use-submit";
 import { TagPicker } from "./tag-picker";
+import { ColorField } from "./color-field";
 import { deleteProduct, saveProduct, type ProductState } from "./actions";
 
 export type FormProduct = {
@@ -18,6 +19,7 @@ export type FormProduct = {
   price: number;
   category_id: string | null;
   tags: string[];
+  colors: string[];
   is_active: boolean;
   is_featured: boolean;
   images: { path: string; alt: string }[];
@@ -195,6 +197,9 @@ export function ProductForm({
 
           <TagPicker options={tagOptions} selected={product?.tags ?? []} />
           {err("tags") && <p className="text-sm text-rose-ink">{err("tags")}</p>}
+
+          <ColorField colors={product?.colors ?? []} />
+          {err("colors") && <p className="text-sm text-rose-ink">{err("colors")}</p>}
 
           <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:gap-8">
             <Check2 name="is_active" label="Visible en la tienda" defaultChecked={product?.is_active ?? true} />

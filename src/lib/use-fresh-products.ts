@@ -25,7 +25,7 @@ export function useFreshProducts(
 
     createClient()
       .from("products")
-      .select("id, name, slug, price, category:categories(slug), images:product_images(path, sort_order)")
+      .select("id, name, slug, price, colors, category:categories(slug), images:product_images(path, sort_order)")
       .in("id", list)
       .then(({ data, error }) => {
         if (error || !data) return;
@@ -39,6 +39,7 @@ export function useFreshProducts(
             name: p.name,
             slug: p.slug,
             price: Number(p.price),
+            colors: (p.colors as string[] | null) ?? [],
             imagePath: images[0]?.path ?? null,
             categorySlug: category?.slug ?? null,
           };

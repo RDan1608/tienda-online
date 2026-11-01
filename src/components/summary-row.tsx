@@ -8,11 +8,14 @@ export function SummaryRow({
   product,
   children,
   meta,
+  detail,
   leaving = false,
 }: {
   product: ProductSummary;
   children?: React.ReactNode;
   meta?: React.ReactNode;
+  /** Línea secundaria bajo el nombre (por ejemplo el color elegido). */
+  detail?: string | null;
   /** true mientras se anima su salida (se pliega y se desvanece) */
   leaving?: boolean;
 }) {
@@ -37,6 +40,7 @@ export function SummaryRow({
         <div className="flex items-start justify-between gap-3">
           <Link href={`/producto/${product.slug}`} className="line-clamp-2 leading-snug hover:underline">
             {product.name}
+            {detail && <span className="mt-0.5 block text-sm text-muted">Color: {detail}</span>}
           </Link>
           {meta ?? <p className="shrink-0 font-medium">{formatPrice(product.price)}</p>}
         </div>

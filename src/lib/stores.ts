@@ -8,7 +8,11 @@ import type { ProductSummary } from "@/lib/types";
 // Carrito y favoritos viven en localStorage: el público no tiene cuenta.
 // Los precios aquí son referencia; el total real lo calcula create_order().
 
-export type CartItem = ProductSummary & { qty: number };
+export type CartItem = ProductSummary & { qty: number; color: string | null };
+
+/** Un mismo producto en dos colores son dos renglones distintos del pedido. */
+export const lineKey = (id: string, color: string | null) => `${id}|${color ?? ""}`;
+export const itemKey = (i: Pick<CartItem, "id" | "color">) => lineKey(i.id, i.color);
 
 /** Último cambio notable del carrito: alimenta el aviso flotante ("Agregado" / "Quitado · Deshacer"). */
 export type CartEvent = { kind: "added" | "removed"; item: CartItem; at: number };
@@ -16,11 +20,11 @@ export type CartEvent = { kind: "added" | "removed"; item: CartItem; at: number 
 type CartState = {
   items: CartItem[];
   lastEvent: CartEvent | null;
-  add: (product: ProductSummary, qty?: number) => void;
-  setQty: (id: string, qty: number) => void;
+  add: (product: ProductSummary, qty?: number, color?: string | null) => void;
+  setQty: (key: string, qty: number) => void;
   /** Resta uno; al llegar a 0 quita el producto (con Deshacer). */
-  dec: (id: string) => void;
-  remove: (id: string) => void;
+  dec: (key: string) => void;
+  remove: (key: string) => void;
   /** Deshace la última eliminación. */
   restore: () => void;
   /** Deshace el último "agregado" (quita el producto sin dejar aviso de eliminación). */
@@ -41,66 +45,88 @@ function syncItems<T extends ProductSummary>(items: T[], fresh: ProductSummary[]
   });
 }
 
+/** Igual que syncItems, pero además descarta renglones cuyo color ya no existe y limpia colores de productos que ya no los usan. */
+function syncCart(items: CartItem[], fresh: ProductSummary[]): CartItem[] {
+  const byId = new Map(fresh.map((p) => [p.id, p]));
+  return items.flatMap((i) => {
+    const p = byId.get(i.id);
+    if (!p) return [];
+    if (p.colors.length === 0) return [{ ...i, ...p, color: null }];
+    if (!i.color || !p.colors.includes(i.color)) return [];
+    return [{ ...i, ...p }];
+  });
+}
+
 export const useCart = create<CartState>()(
   persist(
     (set) => ({
       items: [],
       lastEvent: null,
-      add: (product, qty = 1) =>
+      add: (product, qty = 1, color = null) =>
         set((s) => {
-          const existing = s.items.find((i) => i.id === product.id);
+          const key = lineKey(product.id, color);
+          const existing = s.items.find((i) => itemKey(i) === key);
           if (existing) {
             return {
               items: s.items.map((i) =>
-                i.id === product.id ? { ...i, qty: Math.min(i.qty + qty, MAX_QTY) } : i,
+                itemKey(i) === key ? { ...i, qty: Math.min(i.qty + qty, MAX_QTY) } : i,
               ),
             };
           }
           // Solo la PRIMERA vez que entra al carrito se avisa; después el botón ya muestra la cantidad.
-          const item = { ...product, qty };
+          const item: CartItem = { ...product, qty, color };
           return { items: [...s.items, item], lastEvent: { kind: "added", item, at: Date.now() } };
         }),
-      setQty: (id, qty) =>
+      setQty: (key, qty) =>
         set((s) => ({
           items: s.items.map((i) =>
-            i.id === id ? { ...i, qty: Math.min(Math.max(qty, 1), MAX_QTY) } : i,
+            itemKey(i) === key ? { ...i, qty: Math.min(Math.max(qty, 1), MAX_QTY) } : i,
           ),
         })),
-      dec: (id) =>
+      dec: (key) =>
         set((s) => {
-          const item = s.items.find((i) => i.id === id);
+          const item = s.items.find((i) => itemKey(i) === key);
           if (!item) return s;
           if (item.qty > 1) {
-            return { items: s.items.map((i) => (i.id === id ? { ...i, qty: i.qty - 1 } : i)) };
+            return { items: s.items.map((i) => (itemKey(i) === key ? { ...i, qty: i.qty - 1 } : i)) };
           }
-          return { items: s.items.filter((i) => i.id !== id), lastEvent: { kind: "removed", item, at: Date.now() } };
+          return { items: s.items.filter((i) => itemKey(i) !== key), lastEvent: { kind: "removed", item, at: Date.now() } };
         }),
-      remove: (id) =>
+      remove: (key) =>
         set((s) => {
-          const item = s.items.find((i) => i.id === id);
+          const item = s.items.find((i) => itemKey(i) === key);
           return {
-            items: s.items.filter((i) => i.id !== id),
+            items: s.items.filter((i) => itemKey(i) !== key),
             lastEvent: item ? { kind: "removed", item, at: Date.now() } : s.lastEvent,
           };
         }),
       restore: () =>
         set((s) => {
           const ev = s.lastEvent;
-          if (!ev || ev.kind !== "removed" || s.items.some((i) => i.id === ev.item.id)) return { lastEvent: null };
+          if (!ev || ev.kind !== "removed" || s.items.some((i) => itemKey(i) === itemKey(ev.item))) return { lastEvent: null };
           return { items: [...s.items, ev.item], lastEvent: null };
         }),
       undoAdd: () =>
         set((s) => {
           const ev = s.lastEvent;
           if (!ev || ev.kind !== "added") return { lastEvent: null };
-          return { items: s.items.filter((i) => i.id !== ev.item.id), lastEvent: null };
+          return { items: s.items.filter((i) => itemKey(i) !== itemKey(ev.item)), lastEvent: null };
         }),
       dismissEvent: () => set({ lastEvent: null }),
       clear: () => set({ items: [], lastEvent: null }),
-      sync: (fresh) => set((s) => ({ items: syncItems(s.items, fresh) })),
+      sync: (fresh) => set((s) => ({ items: syncCart(s.items, fresh) })),
     }),
     // El aviso es efímero: solo los productos se guardan en el dispositivo.
-    { name: "tienda-cart", version: 1, partialize: (s) => ({ items: s.items }) },
+    {
+      name: "tienda-cart",
+      version: 2,
+      partialize: (s) => ({ items: s.items }),
+      // v1 no tenía colores: esos renglones quedan sin color.
+      migrate: (state) => {
+        const old = state as { items?: CartItem[] };
+        return { items: (old.items ?? []).map((i) => ({ ...i, colors: i.colors ?? [], color: i.color ?? null })) };
+      },
+    },
   ),
 );
 
@@ -153,7 +179,15 @@ export const useFavorites = create<FavoritesState>()(
       sync: (fresh) => set((s) => ({ items: syncItems(s.items, fresh) })),
     }),
     // El aviso es efímero: solo la lista se guarda en el dispositivo.
-    { name: "tienda-favorites", version: 1, partialize: (s) => ({ items: s.items }) },
+    {
+      name: "tienda-favorites",
+      version: 2,
+      partialize: (s) => ({ items: s.items }),
+      migrate: (state) => {
+        const old = state as { items?: ProductSummary[] };
+        return { items: (old.items ?? []).map((i) => ({ ...i, colors: i.colors ?? [] })) };
+      },
+    },
   ),
 );
 
@@ -177,15 +211,16 @@ export function useHydrated() {
 }
 
 /** Cantidad de un producto en el carrito + acciones. Tarjeta, detalle y barra fija comparten esto. */
-export function useCartLine(product: ProductSummary) {
+export function useCartLine(product: ProductSummary, color: string | null = null) {
   const hydrated = useHydrated();
-  const qty = useCart((s) => s.items.find((i) => i.id === product.id)?.qty ?? 0);
+  const key = lineKey(product.id, color);
+  const qty = useCart((s) => s.items.find((i) => itemKey(i) === key)?.qty ?? 0);
   const add = useCart((s) => s.add);
   const dec = useCart((s) => s.dec);
 
   return {
     qty: hydrated ? qty : 0,
-    inc: () => add(product, 1),
-    dec: () => dec(product.id),
+    inc: () => add(product, 1, color),
+    dec: () => dec(key),
   };
 }

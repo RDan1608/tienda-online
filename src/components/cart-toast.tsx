@@ -69,7 +69,9 @@ export function CartToast() {
         <Icon className="size-4" strokeWidth={source === "fav" ? 2 : 2.5} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{event.item.name}</p>
+        <p className="truncate text-sm font-medium">{event.item.name}
+          {"color" in event.item && event.item.color ? ` · ${event.item.color}` : ""}
+        </p>
         <p className="text-xs text-ivory/70">{message}</p>
       </div>
       {source === "cart" && !removed && (

@@ -18,6 +18,8 @@ export type Product = {
   description: string;
   price: number;
   tags: string[];
+  /** Colores a elegir al pedir (vacío = el producto no tiene variantes de color). */
+  colors: string[];
   is_featured: boolean;
   sold_count: number;
   created_at: string;
@@ -26,16 +28,16 @@ export type Product = {
 };
 
 /** Lo que necesita una tarjeta de producto (el catálogo liviano y el detalle lo cumplen). */
-export type CardProduct = Pick<Product, "id" | "name" | "slug" | "price" | "category" | "images">;
+export type CardProduct = Pick<Product, "id" | "name" | "slug" | "price" | "colors" | "category" | "images">;
 
 /** Producto liviano del catálogo, con texto pre-normalizado para buscar en el navegador. */
 export type CatalogItem = Pick<
   Product,
-  "id" | "name" | "slug" | "price" | "tags" | "is_featured" | "sold_count" | "created_at" | "category" | "images"
+  "id" | "name" | "slug" | "price" | "colors" | "tags" | "is_featured" | "sold_count" | "created_at" | "category" | "images"
 > & { search: string };
 
 /** Lo mínimo para pintar una tarjeta / guardar en carrito o favoritos. */
-export type ProductSummary = Pick<Product, "id" | "name" | "slug" | "price"> & {
+export type ProductSummary = Pick<Product, "id" | "name" | "slug" | "price" | "colors"> & {
   imagePath: string | null;
   categorySlug: string | null;
 };
@@ -46,6 +48,7 @@ export function toSummary(p: CardProduct): ProductSummary {
     name: p.name,
     slug: p.slug,
     price: p.price,
+    colors: p.colors,
     imagePath: p.images[0]?.path ?? null,
     categorySlug: p.category?.slug ?? null,
   };

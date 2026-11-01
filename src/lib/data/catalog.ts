@@ -7,7 +7,7 @@ import type { CatalogItem, Category, Product } from "@/lib/types";
 export const CATALOG_TAG = "catalog";
 
 const PRODUCT_FIELDS =
-  "id, name, slug, description, price, tags, is_featured, sold_count, created_at, images:product_images(path, alt, sort_order)";
+  "id, name, slug, description, price, colors, tags, is_featured, sold_count, created_at, images:product_images(path, alt, sort_order)";
 const SELECT = `${PRODUCT_FIELDS}, category:categories(name, slug)`;
 // !inner: permite filtrar por slug de categoría desde la relación.
 const SELECT_INNER = `${PRODUCT_FIELDS}, category:categories!inner(name, slug)`;
@@ -16,6 +16,7 @@ function normalize(rows: unknown[] | null): Product[] {
   return ((rows ?? []) as Product[]).map((p) => ({
     ...p,
     price: Number(p.price),
+    colors: p.colors ?? [],
     images: [...(p.images ?? [])].sort((a, b) => a.sort_order - b.sort_order),
   }));
 }
@@ -55,6 +56,7 @@ export async function getCatalogItems(): Promise<CatalogItem[]> {
     name: p.name,
     slug: p.slug,
     price: p.price,
+    colors: p.colors ?? [],
     tags: p.tags,
     is_featured: p.is_featured,
     sold_count: p.sold_count,
