@@ -1,11 +1,6 @@
-import { ViewTransition } from "react";
-
 // A diferencia del layout, el template se vuelve a montar en cada navegación:
 // cada página entra con un fundido corto en vez de aparecer de golpe.
+// Sin ViewTransition: el fundido cruzado dejaba ver la página anterior encimada a media transición.
 export default function StoreTemplate({ children }: { children: React.ReactNode }) {
-  return (
-    <ViewTransition enter="auto" exit="auto" default="none">
-      <div className="page-in">{children}</div>
-    </ViewTransition>
-  );
+  return <div className="page-in">{children}</div>;
 }
