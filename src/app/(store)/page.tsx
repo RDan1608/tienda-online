@@ -43,7 +43,10 @@ export default async function Home() {
   return (
     <>
       {/* ── Marca: un mensaje, una acción ─────────────────────────── */}
-      <section className="px-4 pb-8 pt-8 sm:px-6 sm:pb-12 sm:pt-16">
+      <section className="relative isolate px-4 pb-8 pt-8 sm:px-6 sm:pb-12 sm:pt-16">
+        <div aria-hidden className="blob -right-16 -top-10 -z-10 size-64 bg-dusty/60 sm:size-96" />
+        <div aria-hidden className="blob -left-20 top-40 -z-10 size-56 bg-blush sm:size-80 [animation-delay:-5s]" />
+        <div aria-hidden className="blob right-10 top-72 -z-10 size-44 bg-butter [animation-delay:-9s]" />
         <div className="mx-auto max-w-6xl">
           <h1
             className="card-in max-w-[14ch] font-display text-[2.4rem] font-extrabold leading-[1.04] tracking-[-0.045em] text-balance sm:max-w-[18ch] sm:text-6xl"
@@ -59,7 +62,7 @@ export default async function Home() {
           <div className="card-in mt-6" style={{ "--i": 2 } as React.CSSProperties}>
             <Link
               href="/catalogo"
-              className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-navy px-8 text-[15px] font-semibold text-ivory shadow-soft transition duration-150 hover:bg-navy-deep active:scale-[0.98] sm:w-auto"
+              className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-b from-[#40597a] to-navy px-8 text-[15px] font-semibold text-ivory shadow-soft transition duration-150 hover:bg-navy-deep active:scale-[0.98] sm:w-auto"
             >
               Ver catálogo <ArrowRight className="size-[18px]" />
             </Link>
@@ -112,7 +115,7 @@ export default async function Home() {
 
       {/* ── Más vendidos ───────────────────────────────────────────── */}
       {bestSellers.length > 0 && (
-        <section className="mt-10" aria-label="Más vendidos">
+        <section className="reveal mt-10" aria-label="Más vendidos">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <SectionHeader title="Más vendidos" href="/catalogo?sort=popular" />
           </div>
@@ -129,7 +132,7 @@ export default async function Home() {
       )}
 
       {/* ── Cómo pedir: tres íconos, sin párrafos ───────────────────── */}
-      <section id="como-pedir" aria-label="Cómo pedir" className="mx-4 mt-10 scroll-mt-20 rounded-[24px] bg-butter px-4 py-5 sm:mx-auto sm:max-w-6xl">
+      <section id="como-pedir" aria-label="Cómo pedir" className="reveal mx-4 mt-10 scroll-mt-20 rounded-[24px] bg-butter px-4 py-5 sm:mx-auto sm:max-w-6xl">
         <ol className="grid grid-cols-3 gap-2 text-center">
           {steps.map(({ icon: Icon, label }, i) => (
             <li key={label} className="flex flex-col items-center gap-2">
@@ -148,7 +151,7 @@ export default async function Home() {
 
       {/* ── Novedades ──────────────────────────────────────────────── */}
       {fresh.length > 0 && (
-        <section className="mx-auto mt-10 max-w-6xl px-4 sm:px-6" aria-label="Novedades">
+        <section className="reveal mx-auto mt-10 max-w-6xl px-4 sm:px-6" aria-label="Novedades">
           <SectionHeader title="Novedades" href="/catalogo?sort=nuevo" />
           <ProductGrid products={fresh} />
         </section>
@@ -156,7 +159,7 @@ export default async function Home() {
 
       {/* ── Precio de entrada (dato real del catálogo) ──────────────── */}
       {floor !== null && (
-        <section className="mx-auto mt-10 max-w-6xl px-4 sm:px-6">
+        <section className="reveal mx-auto mt-10 max-w-6xl px-4 sm:px-6">
           <Link
             href="/catalogo?sort=precio-asc"
             className="group flex items-center justify-between gap-4 overflow-hidden rounded-[24px] bg-navy px-6 py-6 text-ivory transition-transform duration-200 active:scale-[0.985]"

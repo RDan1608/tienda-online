@@ -164,12 +164,12 @@ async function Related({ product }: { product: Parameters<typeof getRelated>[0] 
 function ProductFallback() {
   return (
     <div className="grid gap-8 md:grid-cols-2 md:gap-12" aria-hidden>
-      <div className="aspect-[4/5] animate-pulse rounded-2xl bg-powder/70" />
+      <div className="aspect-[4/5] shimmer rounded-2xl" />
       <div className="space-y-4">
-        <div className="h-3 w-24 animate-pulse rounded bg-powder/70" />
-        <div className="h-10 w-3/4 animate-pulse rounded bg-powder/70" />
-        <div className="h-7 w-28 animate-pulse rounded bg-powder/70" />
-        <div className="h-12 animate-pulse rounded-full bg-powder/70" />
+        <div className="h-3 w-24 shimmer rounded" />
+        <div className="h-10 w-3/4 shimmer rounded" />
+        <div className="h-7 w-28 shimmer rounded" />
+        <div className="h-12 shimmer rounded-full" />
       </div>
     </div>
   );

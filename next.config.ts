@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   images: {
+    // AVIF primero (más liviano con la misma calidad); 90 para la foto grande del producto.
+    formats: ["image/avif", "image/webp"],
+    qualities: [75, 90],
     remotePatterns: supabaseUrl
       ? [new URL(`${supabaseUrl}/storage/v1/object/public/**`)]
       : [],

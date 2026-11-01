@@ -42,10 +42,10 @@ async function Catalog() {
 function CatalogFallback() {
   return (
     <div className="space-y-4">
-      <div className="h-12 animate-pulse rounded-full bg-powder/70" />
+      <div className="h-12 shimmer rounded-full" />
       <div className="flex gap-2">
         {Array.from({ length: 5 }, (_, i) => (
-          <div key={i} className="h-10 w-24 animate-pulse rounded-full bg-powder/70" />
+          <div key={i} className="h-10 w-24 shimmer rounded-full" />
         ))}
       </div>
       <div className="pt-8">

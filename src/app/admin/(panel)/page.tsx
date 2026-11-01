@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/admin";
 import { formatPrice } from "@/lib/format";
 import type { OrderStatus } from "@/lib/orders";
 import { OrderRow } from "./pedidos/order-row";
+import { WeekChart, type Day } from "./week-chart";
 
 const TZ = "America/Tegucigalpa";
 const dayKey = (t: number | string) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date(t));
@@ -36,6 +37,20 @@ export default async function AdminHome() {
   const sold = all.filter((o) => ["confirmado", "preparando", "entregado"].includes(o.status));
   const monthSales = sold.filter((o) => monthKey(o.created_at) === monthKey(now)).reduce((n, o) => n + Number(o.total), 0);
   const inProgress = all.filter((o) => o.status === "confirmado" || o.status === "preparando").length;
+
+  // Ventas por día, últimos 7 días (hora de Honduras). Cuentan los pedidos que no están cancelados.
+  const weekday = new Intl.DateTimeFormat("es-HN", { timeZone: TZ, weekday: "short" });
+  const days: Day[] = Array.from({ length: 7 }, (_, k) => {
+    const t = now - (6 - k) * 86400000;
+    const key = dayKey(t);
+    const mine = all.filter((o) => o.status !== "cancelado" && dayKey(o.created_at) === key);
+    return {
+      label: weekday.format(t).replace(".", "").slice(0, 3),
+      total: mine.reduce((n, o) => n + Number(o.total), 0),
+      orders: mine.length,
+      today: k === 6,
+    };
+  });
 
   const list = products.data ?? [];
   const active = list.filter((p) => p.is_active).length;
@@ -77,6 +92,8 @@ export default async function AdminHome() {
           </li>
         ))}
       </ul>
+
+      <WeekChart days={days} />
 
       {/* Lo que hay que hacer ahora */}
       <section aria-labelledby="atender" className="mt-10">

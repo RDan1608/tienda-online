@@ -11,11 +11,12 @@ type Props = {
   categorySlug: string | null;
   sizes: string;
   priority?: boolean;
+  quality?: number;
   className?: string;
 };
 
 /** Imagen 4:5 del producto, o un placeholder suave con el ícono de su categoría. */
-export function ProductImage({ path, alt, categorySlug, sizes, priority, className = "" }: Props) {
+export function ProductImage({ path, alt, categorySlug, sizes, priority, quality, className = "" }: Props) {
   // Solo las imágenes diferidas se funden al cargar; la principal (LCP) se muestra de inmediato.
   const [loaded, setLoaded] = useState(!!priority);
 
@@ -28,6 +29,7 @@ export function ProductImage({ path, alt, categorySlug, sizes, priority, classNa
           fill
           sizes={sizes}
           priority={priority}
+          quality={quality}
           onLoad={() => setLoaded(true)}
           // Si ya cargó antes de hidratar, onLoad no se dispara: se detecta aquí.
           ref={(el) => {
@@ -52,4 +54,5 @@ export function ProductImage({ path, alt, categorySlug, sizes, priority, classNa
       )}
     </div>
   );
+
 }

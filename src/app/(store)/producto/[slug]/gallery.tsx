@@ -26,6 +26,7 @@ export function Gallery({
         categorySlug={categorySlug}
         sizes="(min-width: 768px) 50vw, 100vw"
         priority
+        quality={90}
       />
     );
   }
@@ -68,6 +69,7 @@ export function Gallery({
                 categorySlug={categorySlug}
                 sizes="85vw"
                 priority={i === 0}
+                quality={90}
               />
             </div>
           ))}
@@ -103,6 +105,7 @@ export function Gallery({
               alt={img.alt || `${name} (${i + 1})`}
               fill
               sizes="50vw"
+              quality={90}
               priority={i === 0}
               className={`object-cover transition-opacity duration-300 ease-out ${
                 i === active ? "opacity-100" : "opacity-0"

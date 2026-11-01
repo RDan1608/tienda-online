@@ -342,3 +342,122 @@ input[type="search"]::-webkit-search-cancel-button {
 .step-in {
   animation: step-in 260ms var(--ease-out);
 }
+
+/* ───────── Transiciones de vista (navegación fluida) ───────── */
+/* Encabezado y barra inferior son los mismos en todas las páginas: se quedan quietos, no se funden. */
+header[data-site-header] {
+  view-transition-name: site-header;
+}
+nav[data-site-nav] {
+  view-transition-name: site-nav;
+}
+::view-transition-group(root) {
+  animation-duration: 220ms;
+  animation-timing-function: var(--ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* ───────── Detalles modernos ───────── */
+/* Aparece al entrar en pantalla (solo navegadores con animaciones ligadas al scroll; en los demás ya está visible). */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.985);
+  }
+}
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 35%;
+  }
+}
+
+/* Esqueletos con brillo que barre en vez de parpadear. */
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+.shimmer {
+  background-color: rgb(220 231 240 / 0.7);
+  background-image: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.65) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* Manchas de color suaves detrás de la portada: dan profundidad sin ruido. */
+@keyframes drift {
+  50% {
+    transform: translate3d(18px, -14px, 0) scale(1.08);
+  }
+}
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(48px);
+  opacity: 0.7;
+  animation: drift 14s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* El encabezado gana fondo y sombra a medida que se baja (sin JavaScript). */
+@keyframes header-scrolled {
+  to {
+    box-shadow: 0 8px 24px -18px rgb(54 77 102 / 0.45);
+    background-color: rgb(247 246 242 / 0.94);
+  }
+}
+@supports (animation-timeline: scroll()) {
+  header[data-site-header] {
+    animation: header-scrolled linear both;
+    animation-timeline: scroll();
+    animation-range: 0 90px;
+  }
+}
+
+/* Tarjetas de producto: levantan un poco con el cursor (no en pantallas táctiles). */
+@media (hover: hover) {
+  .lift {
+    transition:
+      transform 260ms var(--ease-out),
+      filter 260ms var(--ease-out);
+  }
+  .lift:hover {
+    transform: translateY(-4px);
+    filter: drop-shadow(0 14px 18px rgb(54 77 102 / 0.14));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blob,
+  .shimmer {
+    animation: none;
+  }
+  .reveal {
+    animation: none;
+  }
+}
+
+/* Barras del resumen: crecen desde la base, escalonadas. */
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+.bar-grow {
+  transform-origin: bottom;
+  animation: bar-grow 600ms var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 50ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .bar-grow {
+    animation: none;
+  }
+}

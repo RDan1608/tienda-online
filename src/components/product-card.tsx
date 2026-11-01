@@ -11,7 +11,7 @@ export function ProductCard({ product, priority }: { product: CardProduct; prior
   const href = `/producto/${product.slug}`;
 
   return (
-    <article className="group relative">
+    <article className="group lift relative">
       <div className="relative">
         {/* La imagen es un atajo táctil; el enlace accesible es el del nombre (evita duplicados al tabular). */}
         <Link href={href} tabIndex={-1} aria-hidden className="block">
@@ -55,11 +55,11 @@ export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
   return (
     <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-4" aria-hidden>
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="animate-pulse">
-          <div className="aspect-[4/5] rounded-[20px] bg-powder/70" />
-          <div className="mt-3 h-3 w-1/3 rounded bg-powder/70" />
-          <div className="mt-2 h-4 w-3/4 rounded bg-powder/70" />
-          <div className="mt-2 h-4 w-1/4 rounded bg-powder/70" />
+        <div key={i}>
+          <div className="shimmer aspect-[4/5] rounded-[20px]" />
+          <div className="shimmer mt-3 h-3 w-1/3 rounded" />
+          <div className="shimmer mt-2 h-4 w-3/4 rounded" />
+          <div className="shimmer mt-2 h-4 w-1/4 rounded" />
         </div>
       ))}
     </div>

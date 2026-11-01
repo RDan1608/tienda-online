@@ -54,7 +54,7 @@ export function CartView() {
   }, [hasItems]);
 
   if (state.status === "success") return <Confirmation code={state.code} total={state.total} />;
-  if (!hydrated) return <div className="mt-8 h-64 animate-pulse rounded-[28px] bg-powder/50" />;
+  if (!hydrated) return <div className="mt-8 h-64 shimmer rounded-[28px]" />;
 
   if (!items.length) {
     return (
