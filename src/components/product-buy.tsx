@@ -11,14 +11,23 @@ import { CartButton } from "@/components/cart-button";
  */
 export function ProductBuy({ product }: { product: ProductSummary }) {
   const anchor = useRef<HTMLDivElement>(null);
-  const [anchorVisible, setAnchorVisible] = useState(true);
+  const [anchorInView, setAnchorInView] = useState(true);
+  const [scrolled, setScrolled] = useState(false);
+  // La barra solo aparece cuando el botón salió de pantalla Y la persona ya bajó: al entrar al detalle no salta sola.
+  const anchorVisible = anchorInView || !scrolled;
 
   useEffect(() => {
     const el = anchor.current;
     if (!el) return;
-    const io = new IntersectionObserver(([entry]) => setAnchorVisible(entry.isIntersecting), { threshold: 0.2 });
+    const io = new IntersectionObserver(([entry]) => setAnchorInView(entry.isIntersecting), { threshold: 0.2 });
     io.observe(el);
-    return () => io.disconnect();
+    const onScroll = () => setScrolled(window.scrollY > 120);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   // El aviso flotante se aparta de la barra mientras esta es visible.
