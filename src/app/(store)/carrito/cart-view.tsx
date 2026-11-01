@@ -7,7 +7,7 @@ import { formatPrice } from "@/lib/format";
 import { site } from "@/lib/site";
 import { cartTotal, useCart, useHydrated, type CartItem } from "@/lib/stores";
 import { useFreshProducts } from "@/lib/use-fresh-products";
-import { LotBanner } from "@/components/lot-banner";
+import { OrderNote } from "@/components/order-note";
 import { SummaryRow } from "@/components/summary-row";
 import { EmptyState } from "@/components/empty-state";
 import { useSubmit } from "@/lib/use-submit";
@@ -103,7 +103,7 @@ export function CartView() {
 
       {/* Paso 1 · revisar el pedido */}
       <section key={`items-${step}`} aria-label="Tu pedido" className={`step-in ${step === 2 ? "max-lg:hidden" : ""}`}>
-        <LotBanner className="mb-5" />
+        <OrderNote className="mb-5" />
         {removed > 0 && (
           <p className="mb-4 rounded-2xl bg-butter p-3.5 text-sm">
             {removed === 1 ? "Un producto ya no está disponible" : `${removed} productos ya no están disponibles`} y
@@ -416,8 +416,7 @@ function Confirmation({ code, total }: { code: string; total: number }) {
       <p className="mt-3 text-sm text-muted">
         Total estimado <strong className="text-navy">{formatPrice(total)}</strong>
       </p>
-      <LotBanner compact className="mt-5 text-left" />
-      <p className="mt-6 text-[15px]">Te contactaremos para coordinar el pago y la entrega.</p>
+      <p className="mt-6 text-[15px]">Te contactaremos para confirmar tu pedido y coordinar el pago y la entrega. Puedes ver cada etapa en “Seguir mi pedido”.</p>
 
       <div className="mt-8 flex flex-col gap-3">
         {wa && (

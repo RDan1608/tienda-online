@@ -5,8 +5,8 @@
  */
 export const orderStatuses = [
   { value: "nuevo", label: "Recibido", plural: "Nuevos", hint: "Recibimos tu pedido. Te escribiremos para confirmarlo." },
-  { value: "confirmado", label: "Confirmado", plural: "Confirmados", hint: "Tu pedido está confirmado y en lista para el siguiente pedido." },
-  { value: "preparando", label: "Pedido realizado", plural: "Pedido realizado", hint: "Ya hicimos el pedido al proveedor." },
+  { value: "confirmado", label: "Confirmado", plural: "Confirmados", hint: "Tu pedido está confirmado. Lo incluimos en el próximo pedido a nuestro proveedor y te avisamos cuando salga." },
+  { value: "preparando", label: "Pedido realizado", plural: "Pedido realizado", hint: "Ya hicimos el pedido a nuestro proveedor." },
   { value: "en_camino", label: "En camino", plural: "En camino", hint: "Tu pedido viene en camino hacia nosotros." },
   { value: "listo", label: "Listo para entrega", plural: "Listos", hint: "Ya llegó. Coordinamos la entrega contigo." },
   { value: "entregado", label: "Entregado", plural: "Entregados", hint: "Entregado. ¡Gracias por tu compra!" },

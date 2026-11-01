@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { getCatalogItems, getCategories } from "@/lib/data/catalog";
 import { ProductGridSkeleton } from "@/components/product-card";
-import { LotBanner } from "@/components/lot-banner";
 import { CatalogClient } from "./catalog-client";
 
 export const metadata: Metadata = {
@@ -17,7 +16,6 @@ export default function CatalogPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 sm:pt-12 lg:px-10">
       <h1 className="mb-6 font-display text-4xl font-semibold tracking-[-0.025em] sm:text-5xl">Catálogo</h1>
-      <LotBanner compact className="mb-5" />
       <Suspense fallback={<CatalogFallback />}>
         <Catalog />
       </Suspense>

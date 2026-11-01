@@ -12,7 +12,6 @@ export type Tracked = {
   customer: string;
   items: { name: string; qty: number; price: number }[];
   events: { status: OrderStatus; at: string; note: string | null }[];
-  batch: { name: string; status: "abierto" | "cerrado"; min_orders: number; deadline: string | null; count: number } | null;
 };
 
 export type TrackState =

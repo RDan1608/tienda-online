@@ -6,13 +6,12 @@ import { storageUrl } from "@/lib/env";
 import { formatPrice } from "@/lib/format";
 import { getCatalogItems, getCategories } from "@/lib/data/catalog";
 import { CategoryArt, categoryTone } from "@/components/illustrations";
-import { LotBanner } from "@/components/lot-banner";
 import { ProductCard, ProductGrid } from "@/components/product-card";
 
 const steps = [
   { icon: ShoppingBag, label: "Elige", text: "Arma tu pedido con lo que te guste." },
   { icon: Send, label: "Envía tu pedido", text: "Sin pagar en línea: solo dejas tus datos." },
-  { icon: MessageCircle, label: "Coordinamos", text: "Te escribimos para el pago y la entrega." },
+  { icon: MessageCircle, label: "Coordinamos", text: "Te escribimos para confirmar, y te avisamos cada etapa." },
 ];
 
 const pad = "px-4 sm:px-6 lg:px-10";
@@ -124,10 +123,6 @@ export default async function Home() {
           )}
         </div>
       </section>
-
-      <div className={`mx-auto max-w-7xl ${pad} mb-6 lg:mb-8`}>
-        <LotBanner compact />
-      </div>
 
       {/* ── Categorías ─────────────────────────────────────────────── */}
       <section aria-labelledby="categorias" className={`mx-auto max-w-7xl ${pad}`}>
