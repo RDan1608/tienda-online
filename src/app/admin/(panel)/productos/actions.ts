@@ -127,6 +127,15 @@ export async function toggleActive(formData: FormData) {
   redirect("/admin/productos");
 }
 
+export async function toggleFeatured(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const id = z.uuid().parse(formData.get("id"));
+  const featured = formData.get("featured") === "true";
+  await supabase.from("products").update({ is_featured: featured }).eq("id", id);
+  updateTag(CATALOG_TAG);
+  redirect("/admin/productos");
+}
+
 export async function deleteProduct(formData: FormData) {
   const { supabase } = await requireAdmin();
   const id = z.uuid().parse(formData.get("id"));

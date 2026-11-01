@@ -2,16 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, BellOff, LogOut, X } from "lucide-react";
+import { Bell, BellOff, ClipboardList, ExternalLink, LayoutDashboard, LogOut, Package, Tags, X } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { useOrderAlerts } from "./use-order-alerts";
 
 const links = [
-  { href: "/admin", label: "Resumen", exact: true },
-  { href: "/admin/pedidos", label: "Pedidos", badge: true },
-  { href: "/admin/productos", label: "Productos" },
-  { href: "/admin/categorias", label: "Categorías" },
+  { href: "/admin", label: "Resumen", icon: LayoutDashboard, exact: true, badge: false },
+  { href: "/admin/pedidos", label: "Pedidos", icon: ClipboardList, exact: false, badge: true },
+  { href: "/admin/productos", label: "Productos", icon: Package, exact: false, badge: false },
+  { href: "/admin/categorias", label: "Categorías", icon: Tags, exact: false, badge: false },
 ];
+
+const isActive = (l: (typeof links)[number], pathname: string) =>
+  l.exact ? pathname === l.href : pathname.startsWith(l.href);
 
 export function AdminNav({
   email,
@@ -24,14 +27,24 @@ export function AdminNav({
 }) {
   const pathname = usePathname();
   const { toast, dismiss, soundOn, toggleSound } = useOrderAlerts();
+  // En el detalle de un pedido o al editar un producto manda la barra de acciones de esa pantalla.
+  const focusMode = /^\/admin\/(productos|pedidos)\/[^/]+/.test(pathname);
+
+  const iconBtn =
+    "grid size-10 place-items-center rounded-full text-muted transition hover:bg-powder/70 hover:text-navy active:scale-90";
 
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-border bg-ivory/90 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6">
-          <nav aria-label="Admin" className="-mx-1 flex items-center gap-1 overflow-x-auto [scrollbar-width:none]">
+          <Link href="/admin" className="font-display text-lg font-bold tracking-[-0.025em]">
+            Panel
+          </Link>
+
+          {/* Escritorio: navegación arriba. En móvil vive en la barra inferior. */}
+          <nav aria-label="Admin" className="hidden items-center gap-1 md:flex">
             {links.map((l) => {
-              const active = l.exact ? pathname === l.href : pathname.startsWith(l.href);
+              const active = isActive(l, pathname);
               return (
                 <Link
                   key={l.href}
@@ -57,26 +70,23 @@ export function AdminNav({
             })}
           </nav>
 
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-0.5">
             <span className="mr-2 hidden text-xs text-muted lg:block">{email}</span>
+            <Link href="/" target="_blank" className={iconBtn} aria-label="Ver la tienda" title="Ver la tienda">
+              <ExternalLink className="size-[18px]" />
+            </Link>
             <button
               type="button"
               onClick={toggleSound}
               aria-pressed={soundOn}
               aria-label={soundOn ? "Silenciar aviso de pedidos" : "Activar sonido de pedidos nuevos"}
               title={soundOn ? "Sonido activado" : "Activar sonido de pedidos nuevos"}
-              className={`grid size-9 place-items-center rounded-full transition hover:bg-powder/70 ${
-                soundOn ? "text-navy" : "text-muted"
-              }`}
+              className={`${iconBtn} ${soundOn ? "text-navy" : ""}`}
             >
               {soundOn ? <Bell className="size-[18px]" /> : <BellOff className="size-[18px]" />}
             </button>
             <form action={signOutAction}>
-              <button
-                className="grid size-9 place-items-center rounded-full text-muted transition hover:bg-powder/70 hover:text-navy"
-                aria-label="Cerrar sesión"
-                title="Cerrar sesión"
-              >
+              <button className={iconBtn} aria-label="Cerrar sesión" title="Cerrar sesión">
                 <LogOut className="size-[18px]" />
               </button>
             </form>
@@ -84,10 +94,55 @@ export function AdminNav({
         </div>
       </header>
 
+      {/* Móvil: barra inferior, igual que la tienda */}
+      {!focusMode && (
+        <nav
+          aria-label="Admin"
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-ivory/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-16px_rgb(54_77_102/0.35)] backdrop-blur-md [touch-action:manipulation] md:hidden"
+        >
+          <ul className="grid grid-cols-4">
+            {links.map((l) => {
+              const active = isActive(l, pathname);
+              const Icon = l.icon;
+              return (
+                <li key={l.href}>
+                  <Link
+                    href={l.href}
+                    aria-current={active ? "page" : undefined}
+                    className="flex flex-col items-center gap-1 pb-2 pt-2 transition-transform duration-150 active:scale-95"
+                  >
+                    <span
+                      className={`relative grid h-8 w-16 place-items-center rounded-full transition-[background-color,color] duration-200 ${
+                        active ? "bg-navy text-ivory" : "text-muted"
+                      }`}
+                    >
+                      <Icon className="size-[22px]" strokeWidth={active ? 2.25 : 1.6} />
+                      {l.badge && newOrders > 0 && (
+                        <span
+                          className="absolute -right-0.5 -top-1 grid min-w-[18px] place-items-center rounded-full bg-rose-ink px-1 text-[10px] font-bold leading-[18px] tabular-nums text-white ring-2 ring-ivory"
+                          aria-label={`${newOrders} nuevos`}
+                        >
+                          {newOrders > 99 ? "99+" : newOrders}
+                        </span>
+                      )}
+                    </span>
+                    <span className={`text-[11px] leading-none ${active ? "font-bold text-navy" : "font-medium text-muted"}`}>
+                      {l.label}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      )}
+
       {toast && (
         <div
           role="status"
-          className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-sm animate-[toast-in_.3s_ease-out] rounded-2xl bg-navy p-4 text-ivory shadow-xl sm:inset-x-auto sm:right-6"
+          className={`fixed inset-x-4 z-50 mx-auto max-w-sm animate-[toast-in_.3s_ease-out] rounded-2xl bg-navy p-4 text-ivory shadow-xl sm:inset-x-auto sm:right-6 md:bottom-6 ${
+            focusMode ? "bottom-24" : "bottom-[calc(5rem+env(safe-area-inset-bottom))]"
+          }`}
         >
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
@@ -99,12 +154,12 @@ export function AdminNav({
               <Link
                 href={`/admin/pedidos/${toast.id}`}
                 onClick={dismiss}
-                className="mt-3 inline-flex h-9 items-center rounded-full bg-ivory px-4 text-sm font-medium text-navy"
+                className="mt-3 inline-flex h-10 items-center rounded-full bg-ivory px-4 text-sm font-medium text-navy"
               >
                 Ver pedido
               </Link>
             </div>
-            <button onClick={dismiss} aria-label="Cerrar aviso" className="grid size-8 place-items-center rounded-full hover:bg-white/10">
+            <button onClick={dismiss} aria-label="Cerrar aviso" className="grid size-9 place-items-center rounded-full hover:bg-white/10">
               <X className="size-4" />
             </button>
           </div>

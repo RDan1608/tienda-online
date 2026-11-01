@@ -23,7 +23,7 @@ export type FormProduct = {
 };
 
 const field =
-  "w-full rounded-xl border border-border bg-surface px-4 text-[15px] outline-none transition focus:border-steel focus:ring-4 focus:ring-powder";
+  "w-full rounded-2xl border border-border bg-ivory px-4 text-base outline-none transition focus:border-steel focus:ring-4 focus:ring-powder";
 const MAX_IMAGES = 8;
 
 export function ProductForm({
@@ -92,8 +92,8 @@ export function ProductForm({
         <input type="hidden" name="images" value={JSON.stringify(images)} />
 
         {/* Fotos */}
-        <section aria-labelledby="fotos">
-          <h2 id="fotos" className="mb-1 font-display text-2xl font-semibold tracking-[-0.025em]">Fotos</h2>
+        <section aria-labelledby="fotos" className="rounded-3xl bg-surface p-5 ring-1 ring-border">
+          <h2 id="fotos" className="mb-1 font-display text-xl font-bold tracking-[-0.025em]">Fotos</h2>
           <p className="mb-4 text-sm text-muted">
             La primera es la portada. Se optimizan automáticamente. Hasta {MAX_IMAGES}.
           </p>
@@ -155,8 +155,8 @@ export function ProductForm({
         </section>
 
         {/* Datos */}
-        <section aria-labelledby="datos" className="space-y-4">
-          <h2 id="datos" className="font-display text-2xl font-semibold tracking-[-0.025em]">Datos</h2>
+        <section aria-labelledby="datos" className="space-y-4 rounded-3xl bg-surface p-5 ring-1 ring-border">
+          <h2 id="datos" className="font-display text-xl font-bold tracking-[-0.025em]">Datos</h2>
 
           <Labeled label="Nombre" error={err("name")}>
             <input name="name" defaultValue={product?.name} maxLength={120} required className={`${field} h-12`} />
@@ -200,11 +200,11 @@ export function ProductForm({
         </section>
 
         {/* Barra de acciones */}
-        <div className="sticky bottom-0 -mx-4 flex items-center gap-3 border-t border-border bg-ivory/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border">
+        <div className="sticky bottom-0 z-30 -mx-4 flex items-center gap-3 border-t border-border bg-ivory/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border sm:pb-3">
           <button
             type="submit"
             disabled={pending || uploading > 0}
-            className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-navy text-sm font-medium text-ivory transition hover:bg-navy/90 active:scale-[0.98] disabled:opacity-60 sm:flex-none sm:px-10"
+            className="inline-flex h-14 flex-1 items-center justify-center gap-2 rounded-full bg-navy text-base font-semibold text-ivory transition hover:bg-navy/90 active:scale-[0.98] disabled:opacity-60 sm:flex-none sm:px-10"
           >
             {pending ? <LoaderCircle className="size-[18px] animate-spin" /> : null}
             {pending ? "Guardando…" : uploading > 0 ? "Subiendo fotos…" : product ? "Guardar cambios" : "Crear producto"}
@@ -285,7 +285,7 @@ function Labeled({
 }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-sm">{label}</span>
+      <span className="mb-1.5 block text-sm font-semibold">{label}</span>
       {children}
       {hint && !error && <span className="mt-1 block text-xs text-muted">{hint}</span>}
       {error && <span className="mt-1 block text-sm text-red-700">{error}</span>}

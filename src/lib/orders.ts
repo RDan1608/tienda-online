@@ -29,3 +29,27 @@ export function whatsappUrl(phone: string, text: string) {
   if (digits.length === 8) digits = `504${digits}`;
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
+
+/** Siguiente paso natural de un pedido (botón rápido). Entregado y cancelado no avanzan. */
+export function nextStatus(s: OrderStatus): { value: OrderStatus; action: string } | null {
+  switch (s) {
+    case "nuevo":
+      return { value: "confirmado", action: "Confirmar" };
+    case "confirmado":
+      return { value: "preparando", action: "Preparar" };
+    case "preparando":
+      return { value: "entregado", action: "Marcar entregado" };
+    default:
+      return null;
+  }
+}
+
+/** Etiqueta del día para agrupar: Hoy, Ayer o la fecha (hora de Honduras). */
+export function dayLabel(iso: string, now = Date.now()) {
+  const tz = "America/Tegucigalpa";
+  const key = (t: number) => new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(t);
+  const d = new Date(iso).getTime();
+  if (key(d) === key(now)) return "Hoy";
+  if (key(d) === key(now - 86400000)) return "Ayer";
+  return new Intl.DateTimeFormat("es-HN", { timeZone: tz, weekday: "long", day: "numeric", month: "long" }).format(d);
+}

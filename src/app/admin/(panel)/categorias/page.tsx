@@ -16,7 +16,7 @@ export default async function CategoriesPage() {
 
   return (
     <>
-      <h1 className="font-display text-4xl font-semibold tracking-[-0.025em]">Categorías</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-[-0.025em] sm:text-4xl">Categorías</h1>
       <p className="mt-1 text-sm text-muted">El número define el orden en que aparecen en la tienda.</p>
 
       <ul className="mt-8 divide-y divide-border rounded-3xl bg-surface ring-1 ring-border">
@@ -25,7 +25,7 @@ export default async function CategoriesPage() {
         ))}
       </ul>
 
-      <h2 className="mb-3 mt-10 font-display text-2xl font-semibold tracking-[-0.025em]">Nueva categoría</h2>
+      <h2 className="mb-3 mt-10 font-display text-xl font-bold tracking-[-0.025em]">Nueva categoría</h2>
       <CategoryForm />
     </>
   );

@@ -1,28 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, Inbox } from "lucide-react";
+import { Inbox, Search, X } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
-import { formatPrice, timeAgo } from "@/lib/format";
-import { isOrderStatus, orderStatuses, type OrderStatus } from "@/lib/orders";
-import { StatusBadge } from "./status-badge";
+import { dayLabel, isOrderStatus, orderStatuses, type OrderStatus } from "@/lib/orders";
+import { OrderRow, type OrderRowData } from "./order-row";
 
 export const metadata: Metadata = { title: "Pedidos" };
 
-type Row = {
-  id: string;
-  code: string;
-  customer_name: string;
-  phone: string;
-  total: number;
-  status: OrderStatus;
-  created_at: string;
-  items: { qty: number }[];
-};
+type Row = OrderRowData & { items: { qty: number }[] };
 
 export default async function OrdersPage({ searchParams }: PageProps<"/admin/pedidos">) {
   const { supabase } = await requireAdmin();
-  const raw = (await searchParams).estado;
-  const filter = isOrderStatus(raw) ? raw : null;
+  const sp = await searchParams;
+  const filter = isOrderStatus(sp.estado) ? sp.estado : null;
+  // Se quitan los caracteres que tienen significado en el filtro de PostgREST.
+  const q = (typeof sp.q === "string" ? sp.q : "").replace(/[,()%*\\]/g, " ").trim().slice(0, 60);
 
   let query = supabase
     .from("orders")
@@ -30,77 +22,128 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/ped
     .order("created_at", { ascending: false })
     .limit(100);
   if (filter) query = query.eq("status", filter);
+  if (q) query = query.or(`code.ilike.%${q}%,customer_name.ilike.%${q}%,phone.ilike.%${q}%`);
 
   const [{ data }, { data: all }] = await Promise.all([query, supabase.from("orders").select("status")]);
-  const orders = (data ?? []) as unknown as Row[];
+  const orders = ((data ?? []) as unknown as (Row & { items: { qty: number }[] })[]).map((o) => ({
+    ...o,
+    units: o.items.reduce((n, i) => n + i.qty, 0),
+  }));
 
   const counts = new Map<string, number>();
   for (const o of all ?? []) counts.set(o.status, (counts.get(o.status) ?? 0) + 1);
 
+  const href = (estado: OrderStatus | null) => {
+    const p = new URLSearchParams();
+    if (estado) p.set("estado", estado);
+    if (q) p.set("q", q);
+    const s = p.toString();
+    return `/admin/pedidos${s ? `?${s}` : ""}`;
+  };
   const tabs = [
-    { href: "/admin/pedidos", label: "Todos", count: all?.length ?? 0, active: !filter },
+    { key: "todos", href: href(null), label: "Todos", count: all?.length ?? 0, active: !filter },
     ...orderStatuses.map((s) => ({
-      href: `/admin/pedidos?estado=${s.value}`,
+      key: s.value,
+      href: href(s.value),
       label: s.plural,
       count: counts.get(s.value) ?? 0,
       active: filter === s.value,
     })),
   ];
 
+  // Agrupados por día (Hoy, Ayer, fecha) para ubicarse sin leer cada hora.
+  const groups: { label: string; rows: typeof orders }[] = [];
+  for (const o of orders) {
+    const label = dayLabel(o.created_at);
+    const last = groups[groups.length - 1];
+    if (last?.label === label) last.rows.push(o);
+    else groups.push({ label, rows: [o] });
+  }
+
   return (
     <>
-      <h1 className="font-display text-4xl font-semibold tracking-[-0.025em]">Pedidos</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-[-0.025em] sm:text-4xl">Pedidos</h1>
 
-      <nav aria-label="Filtrar por estado" className="-mx-4 mt-6 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0">
-        {tabs.map((t) => (
+      <form role="search" action="/admin/pedidos" className="relative mt-5">
+        {filter && <input type="hidden" name="estado" value={filter} />}
+        <label>
+          <span className="sr-only">Buscar pedidos por código, nombre o teléfono</span>
+          <Search className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-muted" />
+          <input
+            name="q"
+            type="search"
+            defaultValue={q}
+            key={q}
+            placeholder="Buscar por código, nombre o teléfono…"
+            className="h-12 w-full rounded-full border border-transparent bg-powder/70 pl-11 pr-11 text-[15px] outline-none transition placeholder:text-muted/80 focus:border-steel focus:bg-surface focus:ring-4 focus:ring-powder"
+          />
+        </label>
+        {q && (
           <Link
-            key={t.href}
-            href={t.href}
-            aria-current={t.active ? "page" : undefined}
-            className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-sm transition ${
-              t.active ? "border-navy bg-navy text-ivory" : "border-border bg-surface hover:border-steel"
-            }`}
+            href={filter ? `/admin/pedidos?estado=${filter}` : "/admin/pedidos"}
+            aria-label="Borrar búsqueda"
+            className="absolute right-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full text-muted transition hover:bg-powder hover:text-navy"
           >
-            {t.label}
-            <span className={t.active ? "text-ivory/70" : "text-muted"}>{t.count}</span>
+            <X className="size-4" />
           </Link>
-        ))}
-      </nav>
+        )}
+      </form>
+
+      {/* Estados como pestañas con subrayado, igual que las categorías de la tienda */}
+      <div className="-mx-4 mt-3 border-b border-border/70 sm:-mx-6">
+        <nav aria-label="Filtrar por estado" className="flex gap-6 overflow-x-auto px-4 [scrollbar-width:none] sm:px-6">
+          {tabs.map((t) => (
+            <Link
+              key={t.key}
+              href={t.href}
+              aria-current={t.active ? "page" : undefined}
+              className={`relative inline-flex h-12 shrink-0 items-center gap-1.5 text-[15px] transition-colors ${
+                t.active ? "font-bold text-navy" : "font-medium text-muted hover:text-navy"
+              }`}
+            >
+              {t.label}
+              <span className={`text-xs tabular-nums ${t.active ? "text-navy" : "text-muted"}`}>{t.count}</span>
+              <span
+                aria-hidden
+                className={`absolute inset-x-0 bottom-0 h-[3px] origin-left rounded-full bg-navy transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                  t.active ? "scale-x-100" : "scale-x-0"
+                }`}
+              />
+            </Link>
+          ))}
+        </nav>
+      </div>
 
       {orders.length === 0 ? (
-        <div className="mt-8 rounded-3xl bg-powder/50 px-6 py-16 text-center">
+        <div className="mt-8 rounded-3xl bg-powder/50 px-6 py-14 text-center">
           <Inbox className="mx-auto size-8 text-steel" strokeWidth={1.25} />
           <p className="mt-3 text-muted">
-            {filter ? "No hay pedidos con este estado." : "Aún no hay pedidos. Cuando lleguen, aparecerán aquí al instante."}
+            {q || filter
+              ? "No hay pedidos con esos filtros."
+              : "Aún no hay pedidos. Cuando lleguen, aparecerán aquí al instante."}
           </p>
+          {(q || filter) && (
+            <Link href="/admin/pedidos" className="mt-4 inline-flex h-11 items-center rounded-full bg-navy px-5 text-sm font-semibold text-ivory">
+              Ver todos
+            </Link>
+          )}
         </div>
       ) : (
-        <ul className="mt-6 divide-y divide-border rounded-3xl bg-surface ring-1 ring-border">
-          {orders.map((o) => {
-            const units = o.items.reduce((n, i) => n + i.qty, 0);
-            return (
-              <li key={o.id}>
-                <Link
-                  href={`/admin/pedidos/${o.id}`}
-                  className="flex items-center gap-3 p-4 transition first:rounded-t-3xl last:rounded-b-3xl hover:bg-powder/40"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span className="font-medium tabular-nums">{o.code}</span>
-                      <StatusBadge status={o.status} />
-                    </div>
-                    <p className="mt-1 truncate text-sm">{o.customer_name}</p>
-                    <p className="text-xs text-muted">
-                      {units} {units === 1 ? "producto" : "productos"} · {timeAgo(o.created_at)}
-                    </p>
-                  </div>
-                  <p className="shrink-0 font-medium tabular-nums">{formatPrice(o.total)}</p>
-                  <ChevronRight className="size-4 shrink-0 text-muted" />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="mt-5 space-y-6">
+          <p className="text-[15px] font-bold tabular-nums" aria-live="polite">
+            {orders.length} {orders.length === 1 ? "pedido" : "pedidos"}
+          </p>
+          {groups.map((g) => (
+            <section key={g.label} aria-label={g.label}>
+              <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-muted first-letter:uppercase">{g.label}</h2>
+              <ul className="space-y-3">
+                {g.rows.map((o) => (
+                  <OrderRow key={o.id} o={o} />
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
       )}
     </>
   );
