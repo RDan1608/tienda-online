@@ -32,17 +32,19 @@ export function LoginForm() {
         />
       </label>
 
-      <label className="relative block">
-        <span className="sr-only">Contraseña</span>
-        <Lock className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted" />
-        <input
-          name="password"
-          type={show ? "text" : "password"}
-          autoComplete="current-password"
-          placeholder="Contraseña"
-          required
-          className={`${input} pr-14`}
-        />
+      <div className="relative">
+        <label className="block">
+          <span className="sr-only">Contraseña</span>
+          <Lock className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted" />
+          <input
+            name="password"
+            type={show ? "text" : "password"}
+            autoComplete="current-password"
+            placeholder="Contraseña"
+            required
+            className={`${input} pr-14`}
+          />
+        </label>
         <button
           type="button"
           onClick={() => setShow((v) => !v)}
@@ -52,7 +54,7 @@ export function LoginForm() {
         >
           {show ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
         </button>
-      </label>
+      </div>
 
       {state.error && (
         <p role="alert" className="swap-in rounded-2xl bg-blush p-3.5 text-sm font-medium text-rose-ink">

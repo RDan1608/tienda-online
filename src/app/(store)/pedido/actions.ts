@@ -39,5 +39,8 @@ export async function trackOrder(_prev: TrackState, formData: FormData): Promise
     const known = error?.code === "P0003" || error?.code === "P0004";
     return { status: "error", message: known ? error.message : "No pudimos consultar tu pedido. Intenta de nuevo." };
   }
+  if ((data as { error?: string }).error === "not_found") {
+    return { status: "error", message: "No encontramos un pedido con ese código y teléfono." };
+  }
   return { status: "found", order: data as unknown as Tracked };
 }

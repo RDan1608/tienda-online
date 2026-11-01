@@ -1,6 +1,6 @@
 "use server";
 
-import { updateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/admin";
 import { CATALOG_TAG } from "@/lib/data/catalog";
@@ -22,6 +22,7 @@ export async function createTag(_prev: TagState, formData: FormData): Promise<Ta
   if (error) {
     return { status: "error", message: error.code === "23505" ? "Esa etiqueta ya existe." : "No se pudo crear." };
   }
+  revalidatePath("/admin/categorias");
   return { status: "ok", at: Date.now() };
 }
 
@@ -40,6 +41,7 @@ export async function renameTag(_prev: TagState, formData: FormData): Promise<Ta
     return { status: "error", message: error.code === "23505" ? "Ya existe una etiqueta con ese nombre." : "No se pudo renombrar." };
   }
   updateTag(CATALOG_TAG);
+  revalidatePath("/admin/categorias");
   return { status: "ok", at: Date.now() };
 }
 
@@ -50,4 +52,5 @@ export async function deleteTag(formData: FormData) {
   if (!name.success) return;
   await supabase.rpc("delete_tag", { p_name: name.data });
   updateTag(CATALOG_TAG);
+  revalidatePath("/admin/categorias");
 }
