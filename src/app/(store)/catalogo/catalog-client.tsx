@@ -82,7 +82,7 @@ export function CatalogClient({ items, categories }: { items: CatalogItem[]; cat
             <SlidersHorizontal className="size-[17px]" />
             Filtrar
             {panelActive > 0 && (
-              <span className="pill-in grid size-[18px] place-items-center rounded-full bg-rose-ink text-[11px] font-bold text-white">
+              <span className="pill-in grid size-[18px] place-items-center rounded-full bg-rose-badge text-[11px] font-bold text-white">
                 {panelActive}
               </span>
             )}
@@ -133,7 +133,7 @@ export function CatalogClient({ items, categories }: { items: CatalogItem[]; cat
           {total > 0 ? (
             <>
               <h2 className="sr-only">Productos</h2>
-              <div ref={grid} className="relative grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-4">
+              <div ref={grid} className="relative grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-4 lg:gap-x-5 lg:gap-y-9 xl:grid-cols-4">
                 {visible.map((p, i) => (
                   <div key={p.id} data-flip={p.id} className="card-in" style={{ "--i": i % PAGE_SIZE } as React.CSSProperties}>
                     <ProductCard product={p} priority={i < 4} />

@@ -7,11 +7,15 @@ import { formatPrice } from "@/lib/format";
 import { site } from "@/lib/site";
 import { cartTotal, useCart, useHydrated, type CartItem } from "@/lib/stores";
 import { useFreshProducts } from "@/lib/use-fresh-products";
+import { LotBanner } from "@/components/lot-banner";
 import { SummaryRow } from "@/components/summary-row";
 import { EmptyState } from "@/components/empty-state";
 import { useSubmit } from "@/lib/use-submit";
 import { rememberOrder } from "../pedido/track-view";
 import { createOrder, type OrderState } from "./actions";
+
+// Objeto fijo: el estado inicial debe tener siempre la misma identidad (se compara más abajo).
+const IDLE: OrderState = { status: "idle" };
 
 /**
  * Pedido en dos pasos en móvil (1 · revisar, 2 · tus datos) para no mostrar todo a la vez.
@@ -27,13 +31,24 @@ export function CartView() {
     hydrated,
     sync,
   );
-  const [state, formAction, pending] = useActionState<OrderState, FormData>(createOrder, {
-    status: "idle",
-  });
+  const [state, formAction, pending] = useActionState<OrderState, FormData>(createOrder, IDLE);
   const [step, setStep] = useState<1 | 2>(1);
 
+  // La confirmación se muestra solo mientras el pedido recién enviado sigue siendo "el último": en cuanto
+  // el carrito se vacía y la persona agrega algo nuevo, vuelve el flujo normal para hacer otro pedido.
+  // (Estado derivado durante el render; el resultado de la acción queda guardado y no se puede reiniciar.)
+  const [seen, setSeen] = useState<OrderState | null>(null);
+  const [emptied, setEmptied] = useState(false);
+  if (state !== seen) {
+    setSeen(state);
+    setEmptied(false);
+    if (state.status === "success") setStep(1);
+  }
+  if (state.status === "success" && items.length === 0 && !emptied) setEmptied(true);
+  const confirmed = state.status === "success" && (!emptied || items.length === 0);
+
   const onSubmit = useSubmit(formAction);
-  const hasItems = hydrated && items.length > 0 && state.status !== "success";
+  const hasItems = hydrated && items.length > 0 && !confirmed;
 
   const goStep = (n: 1 | 2) => {
     setStep(n);
@@ -57,7 +72,7 @@ export function CartView() {
     };
   }, [hasItems]);
 
-  if (state.status === "success") return <Confirmation code={state.code} total={state.total} />;
+  if (confirmed && state.status === "success") return <Confirmation code={state.code} total={state.total} />;
   if (!hydrated) return <div className="mt-8 h-64 shimmer rounded-[28px]" />;
 
   if (!items.length) {
@@ -88,6 +103,7 @@ export function CartView() {
 
       {/* Paso 1 · revisar el pedido */}
       <section key={`items-${step}`} aria-label="Tu pedido" className={`step-in ${step === 2 ? "max-lg:hidden" : ""}`}>
+        <LotBanner className="mb-5" />
         {removed > 0 && (
           <p className="mb-4 rounded-2xl bg-butter p-3.5 text-sm">
             {removed === 1 ? "Un producto ya no está disponible" : `${removed} productos ya no están disponibles`} y
@@ -400,6 +416,7 @@ function Confirmation({ code, total }: { code: string; total: number }) {
       <p className="mt-3 text-sm text-muted">
         Total estimado <strong className="text-navy">{formatPrice(total)}</strong>
       </p>
+      <LotBanner compact className="mt-5 text-left" />
       <p className="mt-6 text-[15px]">Te contactaremos para coordinar el pago y la entrega.</p>
 
       <div className="mt-8 flex flex-col gap-3">

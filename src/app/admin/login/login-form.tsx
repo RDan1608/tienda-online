@@ -65,7 +65,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-b from-[#40597a] to-navy text-base font-semibold text-ivory shadow-soft transition active:scale-[0.98] disabled:opacity-70"
+        className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-b from-navy-lift to-navy text-base font-semibold text-ivory shadow-soft transition active:scale-[0.98] disabled:opacity-70"
       >
         {pending ? <LoaderCircle className="size-5 animate-spin" /> : "Entrar"}
       </button>

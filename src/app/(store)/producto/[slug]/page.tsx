@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: PageProps<"/producto/[slug]">
 
 export default function ProductPage({ params }: PageProps<"/producto/[slug]">) {
   return (
-    <div className="mx-auto max-w-6xl px-4 pt-6 max-md:pb-20 sm:px-6 sm:pt-10">
+    <div className="mx-auto max-w-7xl px-4 pt-6 max-md:pb-20 sm:px-6 sm:pt-10 lg:px-10">
       <Link
         href="/catalogo"
         className="mb-6 inline-flex items-center gap-1 text-sm text-muted hover:text-navy"

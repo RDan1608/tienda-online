@@ -13,7 +13,7 @@ function Status({ state }: { state: CategoryState }) {
   return (
     <span role="status" className="text-sm">
       {state.status === "ok" && <Check className="size-4 text-steel" aria-label="Guardado" />}
-      {state.status === "error" && <span className="text-red-700">{state.message}</span>}
+      {state.status === "error" && <span className="text-rose-ink">{state.message}</span>}
     </span>
   );
 }
@@ -55,7 +55,7 @@ export function CategoryRow({ category, productCount }: { category: Category; pr
             <span className="text-navy">
               {productCount > 0 ? "Sus productos quedarán sin categoría." : "¿Eliminar?"}
             </span>
-            <button className="font-medium text-red-700">Sí, eliminar</button>
+            <button className="font-medium text-rose-ink">Sí, eliminar</button>
             <button type="button" onClick={() => setConfirm(false)} className="hover:text-navy">
               Cancelar
             </button>
@@ -64,7 +64,7 @@ export function CategoryRow({ category, productCount }: { category: Category; pr
           <button
             type="button"
             onClick={() => setConfirm(true)}
-            className="inline-flex items-center gap-1 transition hover:text-red-700"
+            className="inline-flex items-center gap-1 transition hover:text-rose-ink"
           >
             <Trash2 className="size-3.5" /> Eliminar
           </button>

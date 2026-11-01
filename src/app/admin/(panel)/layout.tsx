@@ -41,7 +41,7 @@ async function Gate({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh bg-ivory">
       <AdminNav email={user.email ?? ""} newOrders={newOrders ?? 0} signOutAction={signOut} />
-      <main className="mx-auto max-w-5xl px-4 pb-28 pt-6 sm:px-6 sm:pt-10 md:pb-24">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 sm:pt-10 md:pb-24">{children}</main>
     </div>
   );
 }

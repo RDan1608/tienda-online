@@ -49,7 +49,7 @@ export function ProductImage({ path, alt, categorySlug, sizes, priority, quality
             backgroundSize: "14px 14px",
           }}
         >
-          <CategoryArt slug={categorySlug} className="w-3/5 drop-shadow-[0_6px_10px_rgb(54_77_102/0.12)]" />
+          <CategoryArt fixed slug={categorySlug} className="w-3/5 drop-shadow-[0_6px_10px_rgb(54_77_102/0.12)]" />
         </div>
       )}
     </div>

@@ -30,6 +30,56 @@
   --surface: #ffffff;
   --muted: #50657b; /* texto secundario: AA (≥4.5) incluso sobre powder */
   --border: color-mix(in oklab, var(--dusty) 55%, white);
+
+  --rose-badge: #b8344f; /* fondo de insignias rosa (texto blanco encima) */
+  --navy-lift: #40597a; /* inicio del degradado de los botones principales */
+  color-scheme: light;
+}
+
+/* ───────── Modo oscuro ─────────
+   Se invierte la escala: "navy" pasa a ser el color CLARO (texto y botones) e "ivory" el fondo OSCURO,
+   así todas las clases existentes (bg-navy text-ivory, text-navy, bg-ivory…) siguen teniendo buen contraste.
+   Se activa con data-theme="dark" (elección de la persona) o, si no eligió, con el tema del sistema. */
+:root[data-theme="dark"] {
+  --powder: #1c2938;
+  --dusty: #3d546b;
+  --steel: #86a8c6;
+  --navy: #e6eef6;
+  --ivory: #0f1722;
+  --navy-deep: #ffffff;
+  --rose: #ff7a92;
+  --rose-ink: #ff9bb0;
+  --blush: #3b2029;
+  --honey: #f2c14e;
+  --butter: #3a2f1b;
+  --honey-ink: #f2c970;
+  --surface: #172231;
+  --muted: #9fb2c6;
+  --border: #2a3b4e;
+  --rose-badge: #c93a56;
+  --navy-lift: #ffffff;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --powder: #1c2938;
+    --dusty: #3d546b;
+    --steel: #86a8c6;
+    --navy: #e6eef6;
+    --ivory: #0f1722;
+    --navy-deep: #ffffff;
+    --rose: #ff7a92;
+    --rose-ink: #ff9bb0;
+    --blush: #3b2029;
+    --butter: #3a2f1b;
+    --honey-ink: #f2c970;
+    --surface: #172231;
+    --muted: #9fb2c6;
+    --border: #2a3b4e;
+    --rose-badge: #c93a56;
+    --navy-lift: #ffffff;
+    color-scheme: dark;
+  }
 }
 
 @theme inline {
@@ -40,6 +90,8 @@
   --color-honey: var(--honey);
   --color-butter: var(--butter);
   --color-honey-ink: var(--honey-ink);
+  --color-rose-badge: var(--rose-badge);
+  --color-navy-lift: var(--navy-lift);
 
   --shadow-soft: 0 1px 2px rgb(54 77 102 / 0.06), 0 8px 24px -12px rgb(54 77 102 / 0.18);
   --shadow-float: 0 12px 32px -12px rgb(54 77 102 / 0.32);
@@ -458,6 +510,48 @@ nav[data-site-nav] {
 }
 @media (prefers-reduced-motion: reduce) {
   .bar-grow {
+    animation: none;
+  }
+}
+
+/* Ícono del botón de tema: luna en claro, sol en oscuro (sin depender de JavaScript para elegir). */
+.theme-sun {
+  display: none;
+}
+:root[data-theme="dark"] .theme-moon {
+  display: none;
+}
+:root[data-theme="dark"] .theme-sun {
+  display: block;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-moon {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .theme-sun {
+    display: block;
+  }
+}
+/* Cambio de tema suave (no en la primera carga). */
+html.theme-fade,
+html.theme-fade * {
+  transition:
+    background-color 250ms ease,
+    color 250ms ease,
+    border-color 250ms ease !important;
+}
+
+/* Flotar suave (composición de la portada en escritorio) */
+@keyframes float {
+  50% {
+    transform: translateY(-12px);
+  }
+}
+.float {
+  animation: float 7s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .float {
     animation: none;
   }
 }

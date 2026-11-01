@@ -154,11 +154,25 @@ const arts: Record<string, () => React.ReactElement> = {
   legos: Brick,
 };
 
-/** Ilustración de una categoría (o un regalo si no hay una específica). */
-export function CategoryArt({ slug, ...props }: { slug: string | null } & SVGProps<SVGSVGElement>) {
+/** Colores de la paleta clara, fijos: para dibujar sobre fondos pastel que no cambian con el modo oscuro. */
+const fixedPalette = {
+  "--navy": "#364d66",
+  "--dusty": "#a9c1d6",
+  "--steel": "#6f8fac",
+  "--powder": "#dce7f0",
+  "--butter": "#fcefd6",
+  "--rose": "#d94a64",
+  "--honey": "#f2c14e",
+} as React.CSSProperties;
+
+/**
+ * Ilustración de una categoría (o un regalo si no hay una específica).
+ * `fixed`: usa siempre la paleta clara (sobre fondos pastel); sin eso se adapta al modo oscuro.
+ */
+export function CategoryArt({ slug, fixed, style, ...props }: { slug: string | null; fixed?: boolean } & SVGProps<SVGSVGElement>) {
   const Art = (slug && arts[slug]) || Gift;
   return (
-    <svg viewBox="0 0 120 120" aria-hidden focusable="false" {...props}>
+    <svg viewBox="0 0 120 120" aria-hidden focusable="false" style={fixed ? { ...fixedPalette, ...style } : style} {...props}>
       <Art />
     </svg>
   );

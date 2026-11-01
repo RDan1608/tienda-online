@@ -79,7 +79,7 @@ export function FavoritesList() {
       </div>
 
       <h2 className="sr-only">Tus favoritos</h2>
-      <ul ref={grid} className="relative mt-5 grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-4">
+      <ul ref={grid} className="relative mt-5 grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-4 lg:grid-cols-4 lg:gap-x-5 xl:grid-cols-5">
         {items.map((p, i) => (
           <li
             key={p.id}

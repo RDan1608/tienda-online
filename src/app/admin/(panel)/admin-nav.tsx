@@ -3,13 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, BellOff, ClipboardList, ExternalLink, LayoutDashboard, LogOut, Package, Tags, X } from "lucide-react";
+import { Bell, BellOff, Boxes, ClipboardList, ExternalLink, LayoutDashboard, LogOut, Package, Tags, X } from "lucide-react";
 import { formatPrice } from "@/lib/format";
+import { ThemeButton } from "@/components/theme-toggle";
 import { useOrderAlerts } from "./use-order-alerts";
 
 const links = [
   { href: "/admin", label: "Resumen", icon: LayoutDashboard, exact: true, badge: false },
   { href: "/admin/pedidos", label: "Pedidos", icon: ClipboardList, exact: false, badge: true },
+  { href: "/admin/lotes", label: "Lotes", icon: Boxes, exact: false, badge: false },
   { href: "/admin/productos", label: "Productos", icon: Package, exact: false, badge: false },
   { href: "/admin/categorias", label: "Categorías", icon: Tags, exact: false, badge: false },
 ];
@@ -40,7 +42,7 @@ export function AdminNav({
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-border bg-ivory/90 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link href="/admin" className="font-display text-lg font-bold tracking-[-0.025em]">
             Panel
           </Link>
@@ -79,6 +81,7 @@ export function AdminNav({
             <Link href="/" target="_blank" className={iconBtn} aria-label="Ver la tienda" title="Ver la tienda">
               <ExternalLink className="size-[18px]" />
             </Link>
+            <ThemeButton className={iconBtn} />
             <button
               type="button"
               onClick={toggleSound}
@@ -104,7 +107,7 @@ export function AdminNav({
           aria-label="Admin"
           className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-ivory/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-16px_rgb(54_77_102/0.35)] backdrop-blur-md [touch-action:manipulation] md:hidden"
         >
-          <ul className="grid grid-cols-4">
+          <ul className="grid grid-cols-5">
             {links.map((l) => {
               const active = pending ? pending === l.href : isActive(l, pathname);
               const Icon = l.icon;
@@ -117,14 +120,14 @@ export function AdminNav({
                     className="flex flex-col items-center gap-1 pb-2 pt-2 transition-transform duration-150 active:scale-95"
                   >
                     <span
-                      className={`relative grid h-8 w-16 place-items-center rounded-full transition-[background-color,color] duration-200 ${
+                      className={`relative grid h-8 w-14 place-items-center rounded-full transition-[background-color,color] duration-200 ${
                         active ? "bg-navy text-ivory" : "text-muted"
                       }`}
                     >
                       <Icon className="size-[22px]" strokeWidth={active ? 2.25 : 1.6} />
                       {l.badge && newOrders > 0 && (
                         <span
-                          className="absolute -right-0.5 -top-1 grid min-w-[18px] place-items-center rounded-full bg-rose-ink px-1 text-[10px] font-bold leading-[18px] tabular-nums text-white ring-2 ring-ivory"
+                          className="absolute -right-0.5 -top-1 grid min-w-[18px] place-items-center rounded-full bg-rose-badge px-1 text-[10px] font-bold leading-[18px] tabular-nums text-white ring-2 ring-ivory"
                           aria-label={`${newOrders} nuevos`}
                         >
                           {newOrders > 99 ? "99+" : newOrders}

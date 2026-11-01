@@ -154,8 +154,8 @@ export function ProductForm({
             className="hidden"
             onChange={(e) => onFiles(e.target.files)}
           />
-          {uploadError && <p role="alert" className="mt-3 text-sm text-red-700">{uploadError}</p>}
-          {err("images") && <p role="alert" className="mt-3 text-sm text-red-700">{err("images")}</p>}
+          {uploadError && <p role="alert" className="mt-3 text-sm text-rose-ink">{uploadError}</p>}
+          {err("images") && <p role="alert" className="mt-3 text-sm text-rose-ink">{err("images")}</p>}
         </section>
 
         {/* Datos */}
@@ -219,7 +219,7 @@ export function ProductForm({
             {state.status === "idle" && justCreated && (
               <span className="inline-flex items-center gap-1 text-navy"><Check className="size-4" /> Producto creado</span>
             )}
-            {state.status === "error" && <span className="text-red-700">{state.message}</span>}
+            {state.status === "error" && <span className="text-rose-ink">{state.message}</span>}
           </p>
         </div>
       </form>
@@ -230,7 +230,7 @@ export function ProductForm({
           {confirmDelete ? (
             <div className="flex flex-wrap items-center gap-3">
               <p className="text-sm">¿Eliminar para siempre? Los pedidos anteriores se conservan.</p>
-              <button className="h-10 rounded-full bg-red-700 px-5 text-sm text-white">Sí, eliminar</button>
+              <button className="h-10 rounded-full bg-rose-badge px-5 text-sm text-white">Sí, eliminar</button>
               <button type="button" onClick={() => setConfirmDelete(false)} className="h-10 px-3 text-sm text-muted hover:text-navy">
                 Cancelar
               </button>
@@ -239,7 +239,7 @@ export function ProductForm({
             <button
               type="button"
               onClick={() => setConfirmDelete(true)}
-              className="inline-flex items-center gap-2 text-sm text-muted transition hover:text-red-700"
+              className="inline-flex items-center gap-2 text-sm text-muted transition hover:text-rose-ink"
             >
               <Trash2 className="size-4" /> Eliminar producto
             </button>
@@ -291,7 +291,7 @@ function Labeled({
       <span className="mb-1.5 block text-sm font-semibold">{label}</span>
       {children}
       {hint && !error && <span className="mt-1 block text-xs text-muted">{hint}</span>}
-      {error && <span className="mt-1 block text-sm text-red-700">{error}</span>}
+      {error && <span className="mt-1 block text-sm text-rose-ink">{error}</span>}
     </label>
   );
 }

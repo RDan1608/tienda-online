@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { Check, LoaderCircle, MessageCircle, PackageSearch } from "lucide-react";
+import { Check, LoaderCircle, MessageCircle, PackageSearch, Users } from "lucide-react";
 import { formatDateTime, formatPrice } from "@/lib/format";
 import { orderStatuses, orderSteps } from "@/lib/orders";
 import { site } from "@/lib/site";
@@ -91,7 +91,7 @@ export function TrackView() {
           <button
             type="submit"
             disabled={pending}
-            className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-b from-[#40597a] to-navy text-base font-semibold text-ivory shadow-soft transition active:scale-[0.98] disabled:opacity-70"
+            className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-b from-navy-lift to-navy text-base font-semibold text-ivory shadow-soft transition active:scale-[0.98] disabled:opacity-70"
           >
             {pending ? <LoaderCircle className="size-5 animate-spin" /> : <PackageSearch className="size-5" />}
             {pending ? "Buscando…" : "Ver mi pedido"}
@@ -124,6 +124,33 @@ function Result({ order }: { order: Tracked }) {
           Pedido {order.code} · {formatDateTime(order.created_at)}
         </p>
       </div>
+
+      {/* Mientras el lote siga abierto, se explica por qué el pedido aún no sale */}
+      {order.batch?.status === "abierto" && !cancelled && (order.status === "nuevo" || order.status === "confirmado") && (
+        <section aria-label="Estado del lote" className="rounded-[28px] bg-butter p-5">
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-ivory shadow-soft">
+              <Users className="size-5" strokeWidth={1.9} />
+            </span>
+            <div>
+              <p className="font-display text-lg font-bold leading-tight tracking-[-0.02em]">
+                {order.batch.name}: {order.batch.count} de {order.batch.min_orders} pedidos
+              </p>
+              <p className="mt-1 text-sm text-honey-ink">
+                {order.batch.count >= order.batch.min_orders
+                  ? "El lote está completo: muy pronto hacemos el pedido al proveedor."
+                  : `Hacemos el pedido al proveedor cuando juntamos ${order.batch.min_orders} pedidos. Faltan ${order.batch.min_orders - order.batch.count}.`}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-ivory/70">
+            <div
+              className="h-full rounded-full bg-navy transition-[width] duration-700"
+              style={{ width: `${Math.max(4, Math.min(100, Math.round((order.batch.count / order.batch.min_orders) * 100)))}%` }}
+            />
+          </div>
+        </section>
+      )}
 
       {!cancelled && (
         <section aria-labelledby="camino" className="rounded-[28px] bg-surface p-6 ring-1 ring-border">

@@ -14,12 +14,13 @@ const monthKey = (t: number | string) => dayKey(t).slice(0, 7);
 
 export default async function AdminHome() {
   const { supabase } = await requireAdmin();
-  const [products, orders] = await Promise.all([
+  const [products, orders, lotRes] = await Promise.all([
     supabase.from("products").select("id, is_active, images:product_images(path)"),
     supabase
       .from("orders")
-      .select("id, code, customer_name, phone, total, status, created_at, items:order_items(qty, product_id, name_snapshot)")
+      .select("id, code, customer_name, phone, total, status, created_at, batch_id, items:order_items(qty, product_id, name_snapshot)")
       .order("created_at", { ascending: false }),
+    supabase.from("batches").select("id, name, min_orders").eq("status", "abierto").maybeSingle(),
   ]);
 
   const all = (orders.data ?? []) as {
@@ -30,6 +31,7 @@ export default async function AdminHome() {
     total: number;
     status: OrderStatus;
     created_at: string;
+    batch_id: string | null;
     items: { qty: number; product_id: string | null; name_snapshot: string }[];
   }[];
   const now = currentTime();
@@ -59,6 +61,9 @@ export default async function AdminHome() {
       today: k === 6,
     };
   });
+
+  const lot = lotRes.data as { id: string; name: string; min_orders: number } | null;
+  const lotCount = lot ? all.filter((o) => o.batch_id === lot.id && o.status !== "cancelado").length : 0;
 
   const list = products.data ?? [];
   const active = list.filter((p) => p.is_active).length;
@@ -100,6 +105,26 @@ export default async function AdminHome() {
           </li>
         ))}
       </ul>
+
+      {lot && (
+        <Link
+          href="/admin/lotes"
+          className="mt-6 block rounded-3xl bg-butter p-5 transition active:scale-[0.99]"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <p className="font-display text-lg font-bold tracking-[-0.02em]">
+              {lot.name}: {lotCount} de {lot.min_orders} pedidos
+            </p>
+            <ChevronRight className="size-4 text-honey-ink" />
+          </div>
+          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-ivory/70">
+            <div className={`h-full rounded-full ${lotCount >= lot.min_orders ? "bg-honey" : "bg-navy"}`} style={{ width: `${Math.max(4, Math.min(100, Math.round((lotCount / lot.min_orders) * 100)))}%` }} />
+          </div>
+          <p className="mt-2 text-xs font-semibold text-honey-ink">
+            {lotCount >= lot.min_orders ? "¡Listo para hacer el pedido al proveedor!" : `Faltan ${lot.min_orders - lotCount} para el mínimo`}
+          </p>
+        </Link>
+      )}
 
       <WeekChart days={days} />
 

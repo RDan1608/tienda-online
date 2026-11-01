@@ -73,7 +73,7 @@ export function TagRow({ name, count }: { name: string; count: number }) {
             <form action={deleteTag} className="flex items-center gap-1.5">
               <input type="hidden" name="name" value={name} />
               <span className="mr-1 hidden text-xs text-muted sm:inline">{count > 0 ? "Se quita de sus productos" : "¿Eliminar?"}</span>
-              <button className="h-10 rounded-full bg-rose-ink px-4 text-sm font-semibold text-white transition active:scale-95">Eliminar</button>
+              <button className="h-10 rounded-full bg-rose-badge px-4 text-sm font-semibold text-white transition active:scale-95">Eliminar</button>
               <button type="button" onClick={() => setConfirm(false)} className="h-10 px-3 text-sm font-medium text-muted hover:text-navy">
                 No
               </button>
