@@ -31,6 +31,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#f7f6f2",
+  // Pantalla completa: así el navegador informa el alto de la barra del sistema (env(safe-area-inset-bottom))
+  // y la barra inferior se sube sobre los botones de Android / el indicador del iPhone.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
