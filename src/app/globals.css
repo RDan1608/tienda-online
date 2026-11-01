@@ -60,6 +60,16 @@
   --font-display: var(--font-jakarta);
 }
 
+/* La página nunca se desplaza de lado (ni por animaciones que sobresalen ni por el gesto del dedo):
+   así la barra inferior fija no se corre ni se ve cortada. "clip" no rompe los elementos sticky. */
+html,
+body {
+  overflow-x: clip;
+}
+html {
+  overscroll-behavior-x: none;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
