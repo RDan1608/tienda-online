@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withBotId } from "botid/next/config";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -33,4 +34,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// BotID: captcha invisible de Vercel (proxy del desafío en el propio dominio).
+export default withBotId(nextConfig);

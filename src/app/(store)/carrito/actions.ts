@@ -1,6 +1,7 @@
 "use server";
 
 import { after } from "next/server";
+import { checkBotId } from "botid/server";
 import { z } from "zod";
 import { createPublicClient } from "@/lib/supabase/public";
 import { sendNewOrderEmail } from "@/lib/email";
@@ -31,6 +32,11 @@ export type OrderState =
   | { status: "success"; code: string; total: number };
 
 export async function createOrder(_prev: OrderState, formData: FormData): Promise<OrderState> {
+  // Captcha invisible. Si el servicio de verificación falla, se deja pasar (no perder pedidos reales);
+  // solo se bloquea cuando BotID confirma que es automatizado.
+  const isBot = await checkBotId().then((v) => v.isBot, () => false);
+  if (isBot) return { status: "error", message: "No pudimos verificar tu pedido. Intenta de nuevo." };
+
   const parsed = schema.safeParse({
     name: formData.get("name") ?? "",
     phone: formData.get("phone") ?? "",
