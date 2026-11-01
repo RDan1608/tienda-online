@@ -40,8 +40,8 @@ export function ProductBuy({ product }: { product: ProductSummary }) {
       <div
         aria-hidden={anchorVisible}
         inert={anchorVisible}
-        className={`fixed inset-x-0 bottom-[var(--mobile-nav-h)] z-30 border-t border-border bg-ivory/95 px-4 py-2.5 backdrop-blur-md transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] md:hidden ${
-          anchorVisible ? "pointer-events-none translate-y-full opacity-0" : "translate-y-0 opacity-100"
+        className={`fixed inset-x-0 bottom-[var(--mobile-nav-h)] z-30 border-t border-border bg-ivory px-4 py-2.5 transition-transform duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] md:hidden ${
+          anchorVisible ? "pointer-events-none translate-y-full" : "translate-y-0"
         }`}
       >
         <div className="mx-auto flex max-w-md items-center gap-3">

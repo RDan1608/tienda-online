@@ -35,18 +35,18 @@ export function MobileNav() {
     <nav
       data-site-nav
       aria-label="Navegación principal"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-ivory pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-16px_rgb(54_77_102/0.35)] backdrop-blur-md [transform:translateZ(0)] [touch-action:manipulation] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 h-[var(--mobile-nav-h)] border-t border-border/80 bg-ivory pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-16px_rgb(54_77_102/0.35)] [transform:translateZ(0)] [touch-action:manipulation] md:hidden"
     >
-      <ul className="grid grid-cols-4">
+      <ul className="grid h-full grid-cols-4">
         {items.map(({ href, label, icon: Icon, count }) => {
           const active = current ? current === href : isActive(href, pathname);
           return (
-            <li key={href}>
+            <li key={href} className="h-full">
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
                 onClick={() => setTapped({ from: pathname, href })}
-                className="group flex flex-col items-center gap-1 pb-2 pt-2 transition-transform duration-150 active:scale-95"
+                className="group flex h-full flex-col items-center justify-center gap-1 transition-transform duration-150 active:scale-95"
               >
                 <span
                   className={`relative grid h-8 w-16 place-items-center rounded-full transition-[background-color,color] duration-200 ${
