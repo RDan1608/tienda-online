@@ -84,7 +84,8 @@ async function ProductDetail({ params }: Pick<PageProps<"/producto/[slug]">, "pa
         // "<" escapado para que el contenido del producto no pueda cerrar la etiqueta.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
-      <div className="grid gap-8 md:grid-cols-2 md:gap-12">
+      {/* Entra con el mismo fundido corto que la página: sin esto el contenido aparecía de golpe al resolver el Suspense. */}
+      <div className="page-in grid gap-8 md:grid-cols-2 md:gap-12">
         <Gallery
           images={product.images}
           name={product.name}
@@ -167,9 +168,11 @@ function ProductFallback() {
       <div className="aspect-[4/5] shimmer rounded-2xl" />
       <div className="space-y-4">
         <div className="h-3 w-24 shimmer rounded" />
-        <div className="h-10 w-3/4 shimmer rounded" />
-        <div className="h-7 w-28 shimmer rounded" />
+        <div className="h-9 w-full shimmer rounded" />
+        <div className="h-9 w-2/3 shimmer rounded" />
+        <div className="h-8 w-28 shimmer rounded" />
         <div className="h-12 shimmer rounded-full" />
+        <div className="h-28 shimmer rounded-3xl" />
       </div>
     </div>
   );
