@@ -20,6 +20,7 @@ export type FormProduct = {
   category_id: string | null;
   tags: string[];
   colors: string[];
+  colors_out: string[];
   is_active: boolean;
   is_featured: boolean;
   images: { path: string; alt: string }[];
@@ -198,7 +199,7 @@ export function ProductForm({
           <TagPicker options={tagOptions} selected={product?.tags ?? []} />
           {err("tags") && <p className="text-sm text-rose-ink">{err("tags")}</p>}
 
-          <ColorField colors={product?.colors ?? []} />
+          <ColorField colors={product?.colors ?? []} colorsOut={product?.colors_out ?? []} />
           {err("colors") && <p className="text-sm text-rose-ink">{err("colors")}</p>}
 
           <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:gap-8">
@@ -219,7 +220,14 @@ export function ProductForm({
           </button>
           <p role="status" className="text-sm">
             {state.status === "saved" && (
-              <span className="inline-flex items-center gap-1 text-navy"><Check className="size-4" /> Guardado</span>
+              <span className="inline-flex flex-col gap-0.5 text-navy">
+                <span className="inline-flex items-center gap-1"><Check className="size-4" /> Guardado{state.hidden ? " · oculto de la tienda" : ""}</span>
+                {state.affected > 0 && (
+                  <span className="text-rose-ink">
+                    {state.affected} {state.affected === 1 ? "pedido sin comprar lo incluye" : "pedidos sin comprar lo incluyen"}: avisa a {state.affected === 1 ? "la clienta" : "las clientas"}.
+                  </span>
+                )}
+              </span>
             )}
             {state.status === "idle" && justCreated && (
               <span className="inline-flex items-center gap-1 text-navy"><Check className="size-4" /> Producto creado</span>

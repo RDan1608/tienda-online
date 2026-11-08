@@ -21,7 +21,8 @@ const views = ["todos", "activos", "ocultos", "sinfoto"] as const;
 
 export default async function ProductsPage({ searchParams }: PageProps<"/admin/productos">) {
   const { supabase } = await requireAdmin();
-  const ver = (await searchParams).ver;
+  const { ver, aviso } = await searchParams;
+  const affected = Number(aviso) > 0 ? Math.min(Number(aviso), 999) : 0;
   const [{ data }, { data: cats }] = await Promise.all([
     supabase
       .from("products")
@@ -55,6 +56,12 @@ export default async function ProductsPage({ searchParams }: PageProps<"/admin/p
           <Plus className="size-4" /> Nuevo
         </Link>
       </div>
+      {affected > 0 && (
+        <p role="status" className="mt-4 rounded-2xl bg-blush px-4 py-3 text-sm text-rose-ink">
+          Producto oculto. {affected} {affected === 1 ? "pedido sin comprar todavía lo incluye" : "pedidos sin comprar todavía lo incluyen"}:
+          revisa <Link href="/admin/pedidos" className="font-semibold underline underline-offset-4">Pedidos</Link> y avisa a {affected === 1 ? "la clienta" : "las clientas"} (cambio, reembolso o cancelar).
+        </p>
+      )}
       <ProductList products={products} categories={(cats ?? []) as { slug: string; name: string }[]} initialView={initialView} />
     </>
   );

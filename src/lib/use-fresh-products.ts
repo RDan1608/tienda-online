@@ -12,7 +12,8 @@ import type { ProductSummary } from "@/lib/types";
 export function useFreshProducts(
   ids: string[],
   hydrated: boolean,
-  onSync: (fresh: ProductSummary[]) => void,
+  /** Aplica los datos frescos y devuelve cuántos renglones quedaron fuera (si no, se cuentan por producto). */
+  onSync: (fresh: ProductSummary[]) => number | void,
 ) {
   const [removed, setRemoved] = useState(0);
   const done = useRef(false);
@@ -21,7 +22,7 @@ export function useFreshProducts(
   useEffect(() => {
     if (!hydrated || done.current || !key) return;
     done.current = true;
-    const list = key.split(",");
+    const list = [...new Set(key.split(","))];
 
     createClient()
       .from("products")
@@ -44,8 +45,8 @@ export function useFreshProducts(
             categorySlug: category?.slug ?? null,
           };
         });
-        setRemoved(list.length - fresh.length);
-        onSync(fresh);
+        const dropped = onSync(fresh);
+        setRemoved(typeof dropped === "number" ? dropped : list.length - fresh.length);
       });
   }, [hydrated, key, onSync]);
 

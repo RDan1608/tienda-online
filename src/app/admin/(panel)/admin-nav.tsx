@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, BellOff, Boxes, ClipboardList, ExternalLink, LayoutDashboard, LogOut, Package, Tags, X } from "lucide-react";
+import { Bell, BellOff, Boxes, ClipboardList, ExternalLink, LayoutDashboard, LogOut, Package, ShieldCheck, Tags, X } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import { ThemeButton } from "@/components/theme-toggle";
 import { useOrderAlerts } from "./use-order-alerts";
@@ -80,6 +80,9 @@ export function AdminNav({
             <span className="mr-2 hidden text-xs text-muted lg:block">{email}</span>
             <Link href="/" target="_blank" className={iconBtn} aria-label="Ver la tienda" title="Ver la tienda">
               <ExternalLink className="size-[18px]" />
+            </Link>
+            <Link href="/admin/seguridad" className={iconBtn} aria-label="Seguridad" title="Seguridad">
+              <ShieldCheck className="size-5" />
             </Link>
             <ThemeButton className={iconBtn} />
             <button

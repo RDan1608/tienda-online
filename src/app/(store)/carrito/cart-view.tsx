@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check, ChevronLeft, Copy, LoaderCircle, Minus, Plus, Trash2 } from "lucide-react";
 import { formatPrice } from "@/lib/format";
@@ -26,10 +26,19 @@ export function CartView() {
   const items = useCart((s) => s.items);
   const sync = useCart((s) => s.sync);
   const clear = useCart((s) => s.clear);
+  // Cuenta renglones (producto + color) que se fueron: producto oculto/agotado o color agotado.
+  const syncCount = useCallback(
+    (fresh: Parameters<typeof sync>[0]) => {
+      const before = useCart.getState().items.length;
+      sync(fresh);
+      return before - useCart.getState().items.length;
+    },
+    [sync],
+  );
   const removed = useFreshProducts(
     items.map((i) => i.id),
     hydrated,
-    sync,
+    syncCount,
   );
   const [state, formAction, pending] = useActionState<OrderState, FormData>(createOrder, IDLE);
   const [step, setStep] = useState<1 | 2>(1);
@@ -106,7 +115,7 @@ export function CartView() {
         <OrderNote className="mb-5" />
         {removed > 0 && (
           <p className="mb-4 rounded-2xl bg-butter p-3.5 text-sm">
-            {removed === 1 ? "Un producto ya no está disponible" : `${removed} productos ya no están disponibles`} y
+            {removed === 1 ? "Un artículo se agotó o ya no está disponible" : `${removed} artículos se agotaron o ya no están disponibles`} y
             se quitó de tu pedido.
           </p>
         )}

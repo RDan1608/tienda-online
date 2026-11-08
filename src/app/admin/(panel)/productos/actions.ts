@@ -17,6 +17,7 @@ const schema = z.object({
   category_id: z.union([z.uuid(), z.literal("")]),
   tags: z.string().max(300, "Demasiadas etiquetas"),
   colors: z.string().max(500, "Demasiados colores"),
+  colors_out: z.string().max(500),
   images: z
     .array(
       z.object({
@@ -29,7 +30,7 @@ const schema = z.object({
 
 export type ProductState =
   | { status: "idle" }
-  | { status: "saved"; at: number }
+  | { status: "saved"; at: number; /** Pedidos sin comprar al proveedor que piden algo ya agotado. */ affected: number; hidden: boolean }
   | { status: "error"; message: string; fields?: Partial<Record<string, string>> };
 
 function parseTags(raw: string) {
@@ -43,7 +44,7 @@ function parseTags(raw: string) {
 function parseColors(raw: string) {
   const seen = new Set<string>();
   const colors: string[] = [];
-  for (const c of raw.split(",").map((x) => x.trim().replace(/s+/g, " ")).filter((x) => x && x.length <= 30)) {
+  for (const c of raw.split(",").map((x) => x.trim().replace(/\s+/g, " ")).filter((x) => x && x.length <= 30)) {
     if (!seen.has(c.toLowerCase())) {
       seen.add(c.toLowerCase());
       colors.push(c);
@@ -70,6 +71,7 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
     category_id: formData.get("category_id") ?? "",
     tags: formData.get("tags") ?? "",
     colors: formData.get("colors") ?? "",
+    colors_out: formData.get("colors_out") ?? "",
     images,
   });
 
@@ -85,14 +87,19 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
     return { status: "error", message: "Una foto no pertenece a este producto." };
   }
 
+  const colors = parseColors(d.colors);
+  const colorsOut = parseColors(d.colors_out).filter((c) => !colors.some((x) => x.toLowerCase() === c.toLowerCase()));
+
   const fields = {
     name: d.name,
     description: d.description,
     price: Math.round(d.price * 100) / 100,
     category_id: d.category_id || null,
     tags: parseTags(d.tags),
-    colors: parseColors(d.colors),
-    is_active: formData.get("is_active") === "on",
+    colors,
+    colors_out: colorsOut,
+    // Si tenía colores y ya no queda ninguno disponible, el producto está agotado: se oculta solo.
+    is_active: formData.get("is_active") === "on" && !(colors.length === 0 && colorsOut.length > 0),
     is_featured: formData.get("is_featured") === "on",
   };
 
@@ -135,7 +142,27 @@ export async function saveProduct(_prev: ProductState, formData: FormData): Prom
   updateTag(CATALOG_TAG);
 
   if (!existing) redirect(`/admin/productos/${d.id}?creado=1`);
-  return { status: "saved", at: Date.now() };
+  const affected = await countAffectedOrders(supabase, d.id, fields.is_active ? colorsOut : null);
+  return { status: "saved", at: Date.now(), affected, hidden: !fields.is_active };
+}
+
+/**
+ * Pedidos que todavía NO se compran al proveedor (nuevo / confirmado) y piden algo que ya no se vende:
+ * el producto entero (`outColors` = null) o alguno de los colores agotados. La admin los contacta.
+ */
+async function countAffectedOrders(
+  supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"],
+  productId: string,
+  outColors: string[] | null,
+) {
+  if (outColors && outColors.length === 0) return 0;
+  const { data } = await supabase
+    .from("order_items")
+    .select("order_id, color, order:orders!inner(status)")
+    .eq("product_id", productId)
+    .in("order.status", ["nuevo", "confirmado"]);
+  const rows = (data ?? []).filter((r) => outColors === null || (r.color && outColors.includes(r.color)));
+  return new Set(rows.map((r) => r.order_id)).size;
 }
 
 export async function toggleActive(formData: FormData) {
@@ -144,7 +171,9 @@ export async function toggleActive(formData: FormData) {
   const active = formData.get("active") === "true";
   await supabase.from("products").update({ is_active: active }).eq("id", id);
   updateTag(CATALOG_TAG);
-  redirect("/admin/productos");
+  // Al ocultar (agotado) se avisa cuántos pedidos pendientes lo incluyen.
+  const affected = active ? 0 : await countAffectedOrders(supabase, id, null);
+  redirect(affected > 0 ? `/admin/productos?aviso=${affected}` : "/admin/productos");
 }
 
 export async function toggleFeatured(formData: FormData) {

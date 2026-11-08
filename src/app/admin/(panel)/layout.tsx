@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { getAdmin } from "@/lib/admin";
 import { signOut } from "../actions";
 import { AdminNav } from "./admin-nav";
@@ -12,7 +13,8 @@ export default function PanelLayout({ children }: LayoutProps<"/admin">) {
 }
 
 async function Gate({ children }: { children: React.ReactNode }) {
-  const { supabase, user, isAdmin } = await getAdmin();
+  const { supabase, user, isAdmin, needsMfa } = await getAdmin();
+  if (user && needsMfa) redirect("/admin/verificar");
 
   // El proxy ya mandó a /admin/login si no hay sesión; aquí cubrimos usuarios sin rol.
   if (!user || !isAdmin) {
